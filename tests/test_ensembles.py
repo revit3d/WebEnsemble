@@ -28,6 +28,7 @@ def test_random_forest():
     y_preds = model.predict(X_test)
     assert y_preds.shape == y_test.shape
 
+
 def test_boosting():
     n_estimators = 100
     model = GradientBoostingMSE(
