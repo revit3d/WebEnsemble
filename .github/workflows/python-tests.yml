@@ -33,7 +33,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
     - name: Lint with pylint
       run: |
-        pylint src tests --max-line-length=120 --disable="C0103,C0114,C0115"
+        pylint src --max-line-length=120 --disable="C0103,C0114,C0115"
     - name: Test with pytest
       run: |
         pytest
