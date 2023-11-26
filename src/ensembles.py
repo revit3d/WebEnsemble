@@ -1,12 +1,12 @@
 from multiprocessing import Pool
 from functools import partial
+from typing import Optional, Tuple
 
 import numpy as np
 
 from scipy.optimize import minimize_scalar
 from sklearn.tree import DecisionTreeRegressor
 
-from typing import Optional, Tuple
 
 
 class RandomForestMSE:
@@ -131,10 +131,19 @@ class GradientBoostingMSE:
         -------
         - n_estimators: The number of trees in the forest.
         - learning_rate: Use alpha * learning_rate instead of alpha
-        - max_depth: The maximum depth of the tree. If None then there is no limits.
-        - feature_subsample_size : The size of feature set for each tree. If None then use one-third of all features.
+        - max_depth: The maximum depth of the tree.\\
+            If None then there is no limits.
+        - feature_subsample_size : The size of feature set for each tree.\\
+            If None then use one-third of all features.
         """
-        raise NotImplementedError()
+        self._n_estimators = n_estimators
+        self._lr = learning_rate
+        self._max_depth = max_depth
+        self._feature_subsample_size = feature_subsample_size
+        if self._feature_subsample_size is None:
+            self._feature_subsample_size = 0.33
+        self._tree_params = trees_parameters
+        self._models = None  # stores a tuple of (model, weight)
 
     def fit(self,
             X: np.ndarray,
@@ -149,7 +158,33 @@ class GradientBoostingMSE:
         - X_val: Array of size n_val_objects, n_features
         - y_val: Array of size n_val_objects
         """
-        raise NotImplementedError()
+        self._models = []
+        preds = np.zeros_like(y)
+
+        for _ in range(self._n_estimators):
+            # compute antigradient
+            residuals = y - preds
+
+            # fit tree to the antigradient
+            estimator = DecisionTreeRegressor(
+                criterion='squared_error',
+                max_depth=self._max_depth,
+                **self._tree_params,
+            )
+            estimator.fit(X, residuals)
+            result = estimator.predict(X)
+
+            # find next optimization step value
+            alpha = minimize_scalar(
+                fun=lambda x: np.mean((preds + x * result - y) ** 2),
+                bounds=(0, np.inf)
+            ).x
+
+            # update predictions vector
+            preds += self._lr * alpha * result
+
+            self._models.append((estimator, alpha))
+
 
     def predict(self, X) -> np.ndarray:
         """
@@ -161,4 +196,22 @@ class GradientBoostingMSE:
         -------
         - y: Array of size n_objects - predicted values for each input sample
         """
-        raise NotImplementedError()
+        if self._models is None:
+            raise RuntimeError('The model is not fitted. run .fit() first.')
+
+        with Pool(processes=self._n_estimators) as pool:
+            preds = pool.map(partial(self._run_estimator, X), self._models)
+        return np.sum(preds, axis=0)
+
+    def _run_estimator(self,
+                       X: np.ndarray,
+                       estimator: Tuple[DecisionTreeRegressor, float]) -> np.ndarray:
+        """
+        Run single estimator from ensemble and collect its predictions.
+        Parameters:
+        -------
+        - X: array of size n_objects, n_features - the input samples 
+        - estimator: tuple (model, model importance [alpha])
+        """
+        estimator, alpha = estimator
+        return alpha * estimator.predict(X)
