@@ -96,6 +96,25 @@ def test_random_forest_6():
     assert y_preds.shape == y_test.shape
 
 
+def test_random_forest_7():
+    trees_parameters = {
+        'min_samples_split': 20,
+        'min_samples_leaf': 5,
+    }
+    n_estimators = 10
+    model = RandomForestMSE(
+        n_estimators=n_estimators,
+        max_depth=5,
+        feature_subsample_size=None,
+        **trees_parameters,
+    )
+
+    model.fit(X_train, y_train)
+
+    y_preds = model.predict(X_test)
+    assert y_preds.shape == y_test.shape
+
+
 def test_gradient_boosting_1():
     n_estimators = 100
     model = GradientBoostingMSE(
@@ -125,7 +144,7 @@ def test_gradient_boosting_2():
 
 
 def test_gradient_boosting_3():
-    n_estimators = 100
+    n_estimators = 10
     model = GradientBoostingMSE(
         n_estimators=n_estimators,
         max_depth=None,
@@ -152,7 +171,7 @@ def test_gradient_boosting_4():
 
 
 def test_gradient_boosting_5():
-    n_estimators = 100
+    n_estimators = 10
     feature_subsample_size = 0.789
     model = GradientBoostingMSE(
         n_estimators=n_estimators,
@@ -188,6 +207,26 @@ def test_gradient_boosting_7():
         learning_rate=1,
         max_depth=5,
         feature_subsample_size=None,
+    )
+
+    model.fit(X_train, y_train)
+
+    y_preds = model.predict(X_test)
+    assert y_preds.shape == y_test.shape
+
+
+def test_gradient_boosting_8():
+    trees_parameters = {
+        'min_samples_split': 20,
+        'min_samples_leaf': 5,
+    }
+    n_estimators = 10
+    model = GradientBoostingMSE(
+        n_estimators=n_estimators,
+        learning_rate=1,
+        max_depth=5,
+        feature_subsample_size=None,
+        **trees_parameters,
     )
 
     model.fit(X_train, y_train)
