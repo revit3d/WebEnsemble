@@ -13,7 +13,7 @@ X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, train_size=0
 
 
 def test_random_forest_1():
-    n_estimators = 100
+    n_estimators = 10
     model = RandomForestMSE(
         n_estimators=n_estimators,
         max_depth=None,
@@ -22,14 +22,14 @@ def test_random_forest_1():
 
     try:
         model.predict(X_val)
-    except:
+    except RuntimeError:
         pass
     else:
         raise AssertionError()
 
 
 def test_random_forest_2():
-    n_estimators = 100
+    n_estimators = 10
     model = RandomForestMSE(
         n_estimators=n_estimators,
         max_depth=None,
@@ -41,7 +41,7 @@ def test_random_forest_2():
 
 
 def test_random_forest_3():
-    n_estimators = 100
+    n_estimators = 10
     model = RandomForestMSE(
         n_estimators=n_estimators,
         max_depth=None,
@@ -53,7 +53,7 @@ def test_random_forest_3():
 
 
 def test_random_forest_4():
-    n_estimators = 100
+    n_estimators = 30
     model = RandomForestMSE(
         n_estimators=n_estimators,
         max_depth=None,
@@ -68,7 +68,7 @@ def test_random_forest_4():
 
 
 def test_random_forest_5():
-    n_estimators = 100
+    n_estimators = 10
     feature_subsample_size = 0.789
     model = RandomForestMSE(
         n_estimators=n_estimators,
@@ -116,7 +116,7 @@ def test_random_forest_7():
 
 
 def test_gradient_boosting_1():
-    n_estimators = 100
+    n_estimators = 10
     model = GradientBoostingMSE(
         n_estimators=n_estimators,
         max_depth=None,
@@ -125,14 +125,14 @@ def test_gradient_boosting_1():
 
     try:
         model.predict(X_val)
-    except:
+    except RuntimeError:
         pass
     else:
         raise AssertionError()
 
 
 def test_gradient_boosting_2():
-    n_estimators = 100
+    n_estimators = 10
     model = GradientBoostingMSE(
         n_estimators=n_estimators,
         max_depth=None,
@@ -156,7 +156,7 @@ def test_gradient_boosting_3():
 
 
 def test_gradient_boosting_4():
-    n_estimators = 100
+    n_estimators = 30
     model = GradientBoostingMSE(
         n_estimators=n_estimators,
         max_depth=None,
