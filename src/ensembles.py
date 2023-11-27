@@ -8,12 +8,11 @@ from scipy.optimize import minimize_scalar
 from sklearn.tree import DecisionTreeRegressor
 
 
-
 class RandomForestMSE:
     def __init__(self,
                  n_estimators: int,
-                 max_depth: Optional[int]=None,
-                 feature_subsample_size: Optional[float]=None,
+                 max_depth: Optional[int] = None,
+                 feature_subsample_size: Optional[float] = None,
                  **trees_parameters) -> None:
         """
         Parameters
@@ -30,14 +29,14 @@ class RandomForestMSE:
         if self._feature_subsample_size is None:
             self._feature_subsample_size = 0.33
         self._tree_params = trees_parameters
-        self._bagging_size = (1 - 1 / np.e)
+        self._bagging_size = 1 - 1 / np.e
         self._models = None  # stores a tuple of (model, used features)
 
     def fit(self,
             X: np.ndarray,
             y: np.ndarray,
-            X_val: Optional[np.ndarray]=None,
-            y_val: Optional[np.ndarray]=None) -> None:
+            X_val: Optional[np.ndarray] = None,
+            y_val: Optional[np.ndarray] = None) -> None:
         """
         Parameters
         -------
@@ -46,6 +45,9 @@ class RandomForestMSE:
         - X_val: array of size n_val_objects, n_features
         - y_val: array of size n_val_objects
         """
+        if X_val is not None or y_val is not None:
+            raise NotImplementedError()
+
         models = []
         for _ in range(self._n_estimators):
             estimator = DecisionTreeRegressor(
@@ -112,7 +114,7 @@ class RandomForestMSE:
         Run single estimator from ensemble and collect its predictions.
         Parameters:
         -------
-        - X: array of size n_objects, n_features - the input samples 
+        - X: array of size n_objects, n_features - the input samples
         - estimator: tuple (model, feature indices used during fitting)
         """
         estimator, feature_idxs = estimator
@@ -122,9 +124,9 @@ class RandomForestMSE:
 class GradientBoostingMSE:
     def __init__(self,
                  n_estimators: int,
-                 learning_rate: float=0.1,
-                 max_depth: int=5,
-                 feature_subsample_size: Optional[float]=None,
+                 learning_rate: float = 0.1,
+                 max_depth: int = 5,
+                 feature_subsample_size: Optional[float] = None,
                  **trees_parameters) -> None:
         """
         Parameters
@@ -148,8 +150,8 @@ class GradientBoostingMSE:
     def fit(self,
             X: np.ndarray,
             y: np.ndarray,
-            X_val: Optional[np.ndarray]=None,
-            y_val: Optional[np.ndarray]=None) -> None:
+            X_val: Optional[np.ndarray] = None,
+            y_val: Optional[np.ndarray] = None) -> None:
         """
         Parameters
         -------
@@ -158,6 +160,9 @@ class GradientBoostingMSE:
         - X_val: Array of size n_val_objects, n_features
         - y_val: Array of size n_val_objects
         """
+        if X_val is not None or y_val is not None:
+            raise NotImplementedError()
+
         self._models = []
         preds = np.zeros_like(y)
 
@@ -172,19 +177,20 @@ class GradientBoostingMSE:
                 **self._tree_params,
             )
             estimator.fit(X, residuals)
-            result = estimator.predict(X)
+
+            # find new approximation for predicions
+            approx = estimator.predict(X)
 
             # find next optimization step value
             alpha = minimize_scalar(
-                fun=lambda x: np.mean((preds + x * result - y) ** 2),
+                fun=lambda x, p=preds, ap=approx, : np.mean((p + x * ap - y) ** 2),
                 bounds=(0, np.inf)
             ).x
 
             # update predictions vector
-            preds += self._lr * alpha * result
+            preds += self._lr * alpha * approx
 
             self._models.append((estimator, alpha))
-
 
     def predict(self, X) -> np.ndarray:
         """
@@ -210,7 +216,7 @@ class GradientBoostingMSE:
         Run single estimator from ensemble and collect its predictions.
         Parameters:
         -------
-        - X: array of size n_objects, n_features - the input samples 
+        - X: array of size n_objects, n_features - the input samples
         - estimator: tuple (model, model importance [alpha])
         """
         estimator, alpha = estimator
