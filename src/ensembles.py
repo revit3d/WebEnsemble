@@ -184,7 +184,7 @@ class GradientBoostingMSE:
             # find next optimization step value
             alpha = minimize_scalar(
                 fun=lambda x, p=preds, ap=approx, : np.mean((p + x * ap - y) ** 2),
-                bounds=(0, np.inf)
+                bounds=(0, 1e9),
             ).x
 
             # update predictions vector
