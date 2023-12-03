@@ -1,0 +1,41 @@
+services:
+  backend-api:
+    build:
+      context: ./src/backend
+    entrypoint: "uvicorn main:app --host 0.0.0.0 --reload"
+    ports:
+      - 8000:8000
+    volumes:
+      - ./src/backend:/app
+    depends_on:
+      - postgresql
+
+  postgresql:
+    image: postgres:12
+    ports:
+      - 5432:5432
+    env_file:
+      - ./src/backend/.temp.env
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer:4.8.1
+    ports:
+      - 8080:8080
+
+  redis:
+    image: redis:7.2.3
+
+  worker:
+    build:
+      context: ./src/backend
+    command: celery -A worker.celery worker --loglevel=info
+    volumes:
+      - ./src/backend:/app
+    depends_on:
+      - backend-api
+      - redis
+
+volumes:
+  pg-data:
