@@ -1,0 +1,49 @@
+#!/bin/bash
+
+debug=false
+
+while getopts "buas-:" option; do
+  case "${option}" in
+    b)
+      # Build Docker container using docker compose
+      docker compose build
+      ;;
+    u)
+      # Run Docker container
+      if [ "$debug" = true ]; then
+        docker compose up --attach backend-api
+      else
+        docker compose up -d
+      fi
+      ;;
+    a)
+      # Attach to Docker container
+      docker compose exec backend-api /bin/bash
+      ;;
+    s)
+      # Shutdown Docker container
+      docker compose down
+      ;;
+    -)
+      case "${OPTARG}" in
+        debug)
+          # Set debug mode to true
+          debug=true
+          ;;
+        *)
+          # Handle invalid options after '--'
+          echo "Invalid option: --${OPTARG}"
+          exit 1
+          ;;
+      esac
+      ;;
+    *)
+      # Handle invalid options
+      echo "Invalid option: ${option}"
+      exit 1
+      ;;
+  esac
+done
+
+# Shift the options so that $1 now refers to the first non-option argument
+shift $((OPTIND-1))
