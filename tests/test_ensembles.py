@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from sklearn.model_selection import train_test_split
 
-from src.ensembles import RandomForestMSE, GradientBoostingMSE
+from src.backend.ensembles import RandomForestMSE, GradientBoostingMSE
 
 np.random.seed(42)
 
@@ -117,6 +117,19 @@ def test_random_forest_7():
 
     y_preds = model.predict(X_test)
     assert y_preds.shape == y_test.shape
+
+
+def test_random_forest_8():
+    n_estimators = 10
+    model = RandomForestMSE(
+        n_estimators=n_estimators,
+        max_depth=5,
+        feature_subsample_size=None
+    )
+
+    train_loss, val_loss = model.fit(X_train, y_train)
+    assert val_loss is None
+    assert train_loss.shape[0] == n_estimators
 
 
 def test_gradient_boosting_1():
@@ -240,3 +253,16 @@ def test_gradient_boosting_8():
 
     y_preds = model.predict(X_test)
     assert y_preds.shape == y_test.shape
+
+
+def test_gradient_boosting_9():
+    n_estimators = 10
+    model = GradientBoostingMSE(
+        n_estimators=n_estimators,
+        max_depth=5,
+        feature_subsample_size=None
+    )
+
+    train_loss, val_loss = model.fit(X_train, y_train)
+    assert val_loss is None
+    assert train_loss.shape[0] == n_estimators

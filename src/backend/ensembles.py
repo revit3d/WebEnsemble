@@ -48,6 +48,7 @@ class RandomForestMSE:
         if X_val is not None or y_val is not None:
             raise NotImplementedError()
 
+        # initialize estimators
         models = []
         for _ in range(self._n_estimators):
             estimator = DecisionTreeRegressor(
@@ -57,8 +58,17 @@ class RandomForestMSE:
             )
             models.append(estimator)
 
+        # fit estimators
         with Pool(processes=self._n_estimators) as pool:
             self._models = pool.map(partial(self._fit_estimator, X, y), models)
+
+        train_loss = self._calc_loss(X, y)
+
+        val_loss = None
+        if X_val is not None:
+            val_loss = self._calc_loss(X_val, y_val)
+
+        return train_loss, val_loss
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -119,6 +129,15 @@ class RandomForestMSE:
         """
         estimator, feature_idxs = estimator
         return estimator.predict(X[:, feature_idxs])
+
+    def _calc_loss(self, X: np.ndarray, y: np.ndarray):
+        """
+        Calculate loss on each iteration of fitting the model.
+        """
+        with Pool(processes=self._n_estimators) as pool:
+            preds = pool.map(partial(self._run_estimator, X), self._models)
+        loss = np.mean(np.square(preds - y), axis=1)
+        return loss
 
 
 class GradientBoostingMSE:
@@ -192,6 +211,14 @@ class GradientBoostingMSE:
 
             self._models.append((estimator, alpha))
 
+        train_loss = self._calc_loss(X, y)
+
+        val_loss = None
+        if X_val is not None:
+            val_loss = self._calc_loss(X_val, y_val)
+
+        return train_loss, val_loss
+
     def predict(self, X) -> np.ndarray:
         """
         Parameters
@@ -221,3 +248,9 @@ class GradientBoostingMSE:
         """
         estimator, alpha = estimator
         return alpha * estimator.predict(X)
+    
+    def _calc_loss(self, X: np.ndarray, y: np.ndarray):
+        with Pool(processes=self._n_estimators) as pool:
+            preds = pool.map(partial(self._run_estimator, X), self._models)
+        loss = np.mean(np.square(preds - y), axis=1)
+        return loss
