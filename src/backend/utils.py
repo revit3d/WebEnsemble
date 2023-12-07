@@ -1,26 +1,50 @@
-import os
 import json
 import pickle
 
 import pandas as pd
 import numpy as np
 
-from fastapi import UploadFile, HTTPException
+from fastapi import UploadFile, HTTPException, Request
 from pydantic import HttpUrl
 
 import models
 
-def validate_csv(file: UploadFile, target_name) -> pd.DataFrame:
+
+def validate_csv(file: UploadFile, target_name=None) -> pd.DataFrame:
+    """
+    Validates a csv file, uploaded via fastapi. Checks, that the file\\
+    can be opened and read by pandas, and checks if the target exists\\
+    in file, if target name is passed.
+
+    Parameters:
+    -------
+    - file: a .csv file to validate
+    - target_name: target column name to look for. If column with such name\\
+    is not found, an exception is raised
+    """
     try:
         data = pd.read_csv(file.file)
         file.file.close()
-        data[target_name]
-    except pd.errors.ParserError or KeyError:
-        HTTPException(422, detail='Bad file format for file {}'.format(file.filename))
+        if target_name is not None:
+            data = data[target_name]
+    except (pd.errors.ParserError, KeyError) as exc:
+        raise HTTPException(422, detail=f'Bad file format for file {file.filename}') from exc
+
     return data
 
 
 def deserialize(model_db_item: models.MLModel):
+    """
+    Deserializes a record from the \'ml_models\' table.
+
+    Parameters:
+    -------
+    - model_db_item: a single-row result of a query to the\\
+    \'ml_models\' table
+    """
+    model_deserialized = None
+    train_loss_deserialized = None
+    val_loss_deserialized = None
     if model_db_item.model_serialized is not None:
         model_deserialized = pickle.loads(model_db_item.model_serialized)
         if model_db_item.train_loss is not None:
@@ -30,20 +54,28 @@ def deserialize(model_db_item: models.MLModel):
 
     model_out_params = {
         'uuid': model_db_item.id,
+        'model_name': model_db_item.model_name,
         **json.loads(model_db_item.model_parameters),
+        'is_trained': model_db_item.is_trained,
         'model_deserialized': model_deserialized,
-        'train_loss': train_loss_deserialized,
-        'val_loss': val_loss_deserialized,
         'train_dataset_file_path': model_db_item.train_dataset_file_path,
         'val_dataset_file_path': model_db_item.val_dataset_file_path,
+        'train_loss': train_loss_deserialized,
+        'val_loss': val_loss_deserialized,
+        'target_name': model_db_item.target_name,
     }
 
     return model_out_params
 
 
-def convert_to_http_url(file_path: str) -> HttpUrl:
-    # Get the absolute path of the file
-    absolute_file_path = os.path.abspath(file_path)
+def convert_to_http_url(request: Request, file_path: str) -> HttpUrl:
+    """
+    Convert file_path to http url for nginx
 
-    # Assuming the file is served from the root path "/"
-    return HttpUrl(f"file:///{absolute_file_path}")
+    Parameters:
+    -------
+    - request: fastapi request from the user
+    - file_path: path to requested file
+    """
+    url = request.url
+    return HttpUrl(f'{url.scheme}://{url.netloc}/{file_path}')

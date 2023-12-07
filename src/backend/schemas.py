@@ -45,8 +45,8 @@ class MLModelBase(BaseModel):
 
 class MLModelOut(MLModelBase):
     uuid: uuid.UUID
-    train_file: HttpUrl | None = None
-    val_file: HttpUrl | None = None
+    train_dataset_file_path: HttpUrl | None = None
+    val_dataset_file_path: HttpUrl | None = None
     train_loss: list | None = None
     val_loss: list | None = None
 
