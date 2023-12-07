@@ -1,6 +1,5 @@
-from multiprocessing import Pool
-from functools import partial
 from typing import Optional, Tuple
+from joblib import Parallel, delayed
 
 import numpy as np
 
@@ -59,8 +58,9 @@ class RandomForestMSE:
             models.append(estimator)
 
         # fit estimators
-        with Pool(processes=self._n_estimators) as pool:
-            self._models = pool.map(partial(self._fit_estimator, X, y), models)
+        self._models = Parallel(n_jobs=-1)(
+            delayed(self._fit_estimator)(X, y, model) for model in models
+        )
 
         train_loss = self._calc_loss(X, y)
 
@@ -83,8 +83,9 @@ class RandomForestMSE:
         if self._models is None:
             raise RuntimeError('The model is not fitted. run .fit() first.')
 
-        with Pool(processes=self._n_estimators) as pool:
-            preds = pool.map(partial(self._run_estimator, X), self._models)
+        preds = Parallel(n_jobs=-1)(
+            delayed(self._run_estimator)(X, model) for model in self._models
+        )
         return np.mean(preds, axis=0)
 
     def _fit_estimator(
@@ -134,8 +135,9 @@ class RandomForestMSE:
         """
         Calculate loss on each iteration of fitting the model.
         """
-        with Pool(processes=self._n_estimators) as pool:
-            preds = pool.map(partial(self._run_estimator, X), self._models)
+        preds = Parallel(n_jobs=-1)(
+            delayed(self._run_estimator)(X, model) for model in self._models
+        )
         loss = np.mean(np.square(preds - y), axis=1)
         return loss
 
@@ -207,7 +209,7 @@ class GradientBoostingMSE:
             ).x
 
             # update predictions vector
-            preds += self._lr * alpha * approx
+            preds = preds + self._lr * alpha * approx
 
             self._models.append((estimator, alpha))
 
@@ -232,8 +234,9 @@ class GradientBoostingMSE:
         if self._models is None:
             raise RuntimeError('The model is not fitted. run .fit() first.')
 
-        with Pool(processes=self._n_estimators) as pool:
-            preds = pool.map(partial(self._run_estimator, X), self._models)
+        preds = Parallel(n_jobs=-1)(
+            delayed(self._run_estimator)(X, model) for model in self._models
+        )
         return np.sum(preds, axis=0)
 
     def _run_estimator(self,
@@ -248,9 +251,10 @@ class GradientBoostingMSE:
         """
         estimator, alpha = estimator
         return alpha * estimator.predict(X)
-    
+
     def _calc_loss(self, X: np.ndarray, y: np.ndarray):
-        with Pool(processes=self._n_estimators) as pool:
-            preds = pool.map(partial(self._run_estimator, X), self._models)
+        preds = Parallel(n_jobs=-1)(
+            delayed(self._run_estimator)(X, model) for model in self._models
+        )
         loss = np.mean(np.square(preds - y), axis=1)
         return loss

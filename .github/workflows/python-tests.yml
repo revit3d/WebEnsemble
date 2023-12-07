@@ -10,46 +10,66 @@ permissions:
   contents: read
 
 jobs:
-  CodeLinting:
-
+  BuildDocker:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.11"
-    - name: Install dependencies
+    - uses: actions/checkout@v4
+    - name: Build Docker container
       run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pylint
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        ./scripts/d -bu
+    - name: Stop Docker container
+      run: |
+        ./scripts/d -s
+
+  CodeLinting:
+    needs: BuildDocker
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build Docker container
+      run: |
+        ./scripts/d -bu
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. Check all the lines to be less than 120 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+        docker exec backend-api flake8 . \
+          --count \
+          --select=E9,F63,F7,F82 \
+          --show-source \
+          --statistics
+        # Check all the lines to be less than 120 chars wide
+        docker exec backend-api flake8 . \
+          --count \
+          --max-complexity=10 \
+          --max-line-length=120 \
+          --statistics \
+          --exclude alembic
     - name: Lint with pylint
       run: |
-        pylint src --max-line-length=120 --disable="C0103,C0114,C0115"
+        docker exec backend-api pylint /app \
+          --max-line-length=120 \
+          --disable="C0103,C0114,C0115" \
+          --fail-under 7.0 \
+          --ignore alembic --ignore tests
+    - name: Stop Docker container
+      run: |
+        ./scripts/d -s
 
   CodeTesting:
+    needs: BuildDocker
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.11"
-      - name: Install dependencies
+      - uses: actions/checkout@v4
+      - name: Build Docker container
         run: |
-          python -m pip install --upgrade pip
-          pip install pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          ./scripts/d -bu
       - name: Test with pytest
         run: |
-          pytest
+          docker exec backend-api pytest -vv
+      - name: Stop Docker container
+        run: |
+          ./scripts/d -s
