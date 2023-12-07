@@ -40,7 +40,7 @@ jobs:
           --show-source \
           --statistics
         # Check all the lines to be less than 120 chars wide
-        docker exec -it backend-api flake8 . \
+        docker exec backend-api flake8 . \
           --count \
           --max-complexity=10 \
           --max-line-length=120 \
@@ -48,7 +48,7 @@ jobs:
           --exclude alembic
     - name: Lint with pylint
       run: |
-        docker exec -it backend-api pylint /app \
+        docker exec backend-api pylint /app \
           --max-line-length=120 \
           --disable="C0103,C0114,C0115" \
           --fail-under 7.0 \
@@ -69,7 +69,7 @@ jobs:
           ./scripts/d -bu
       - name: Test with pytest
         run: |
-          docker exec -it backend-api pytest -vv
+          docker exec backend-api pytest -vv
       - name: Stop Docker container
         run: |
           ./scripts/d -s
