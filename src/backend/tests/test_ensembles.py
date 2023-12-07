@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from sklearn.model_selection import train_test_split
 
-from src.backend.ensembles import RandomForestMSE, GradientBoostingMSE
+from ensembles import RandomForestMSE, GradientBoostingMSE
 
 np.random.seed(42)
 
