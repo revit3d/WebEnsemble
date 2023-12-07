@@ -1,5 +1,6 @@
 services:
   backend-api:
+    container_name: backend-api
     build:
       context: ./src/backend
     entrypoint: "uvicorn main:app --host 0.0.0.0 --reload"
@@ -11,6 +12,7 @@ services:
       - postgresql
 
   postgresql:
+    container_name: postgresql
     image: postgres:12
     ports:
       - 5432:5432
@@ -20,14 +22,17 @@ services:
       - pg-data:/var/lib/postgresql/data
 
   adminer:
+    container_name: adminer
     image: adminer:4.8.1
     ports:
       - 8080:8080
 
   redis:
+    container_name: redis
     image: redis:7.2.3
 
   worker:
+    container_name: worker
     build:
       context: ./src/backend
     command: celery -A worker.celery worker --loglevel=info
