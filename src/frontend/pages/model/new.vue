@@ -21,12 +21,12 @@
             <p class="font-semibold text-3xl tracking-wide mt-10 mb-5">Step 2: Specify ensemble parameters</p>
             <label class="ml-12 text-2xl">
                 Number of estimators in the ensemble
-                <input type="number" class="input-base" v-model="modelParams.n_estimators" />
+                <input type="number" class="input-base" v-model="modelParams.ensemble_params.n_estimators" />
             </label>
             <br />
             <label class="ml-12 text-2xl">
                 Maximum tree depth
-                <input type="number" v-bind:class="[{'input-disabled': noMaxDepth}, 'input-base']" v-model="modelParams.max_depth" :disabled="noMaxDepth === true" />
+                <input type="number" v-bind:class="[{'input-disabled': noMaxDepth}, 'input-base']" v-model="modelParams.ensemble_params.max_depth" :disabled="noMaxDepth === true" />
                 <br />
                 <label class="ml-12">
                     No maximum tree depth
@@ -36,16 +36,16 @@
             <br />
             <label class="mt-8 ml-12 text-2xl">
                 Feature subsample ratio
-                <input type="number" step="any" class="input-base" v-model="modelParams.feature_subsample_size" />
+                <input type="number" step="any" class="input-base" v-model="modelParams.ensemble_params.feature_subsample_size" />
             </label>
             <div v-if="modelParams.model_type === 'gradient_boosting'">
                 <label class="ml-12 text-2xl">
                     Learning rate
-                    <input type="number" step="any" class="input-base" v-model="modelParams.learning_rate" />
+                    <input type="number" step="any" class="input-base" v-model="modelParams.ensemble_params.learning_rate" />
                 </label>
             </div>
             <div v-show="activeStep === 2" class="font-semibold text-2xl mt-8">
-                <button :class="[isEnsParamsValid ? 'button-ready' : 'button-waiting', 'button-container']" @click="nextStep" :disabled="!isEnsParamsValid">Next</button>
+                <button type="button" :class="[isEnsParamsValid ? 'button-ready' : 'button-waiting', 'button-container']" @click="nextStep" :disabled="!isEnsParamsValid">Next</button>
             </div>
         </div>
 
@@ -62,45 +62,45 @@
             <br />
             <label class="ml-12 text-2xl">
                 Minimal number of samples at an internal node
-                <input type="number" class="input-base" v-model="modelParams.min_samples_split" />
+                <input type="number" class="input-base" v-model="modelParams.tree_params.min_samples_split" />
             </label>
             <br />
             <label class="ml-12 text-2xl">
                 Minimal number of samples at a leaf node
-                <input type="number" class="input-base" v-model="modelParams.min_samples_leaf" />
+                <input type="number" class="input-base" v-model="modelParams.tree_params.min_samples_leaf" />
             </label>
             <br />
             <label class="ml-12 text-2xl">
                 Minimal weight fraction at a leaf node
-                <input type="number" step="any" class="input-base" v-model="modelParams.min_weight_fraction_leaf" />
+                <input type="number" step="any" class="input-base" v-model="modelParams.tree_params.min_weight_fraction_leaf" />
             </label>
             <br />
             <label class="ml-12 text-2xl">
                 Number of considered features
-                <input type="number" class="input-base" v-model="modelParams.max_features" />
+                <input type="number" class="input-base" v-model="modelParams.tree_params.max_features" />
             </label>
             <br />
             <label class="ml-12 text-2xl">
                 Random state
-                <input type="number" class="input-base" v-model="modelParams.random_state" />
+                <input type="number" class="input-base" v-model="modelParams.tree_params.random_state" />
             </label>
             <br />
             <label class="ml-12 text-2xl">
                 Maximum leaf nodes
-                <input type="number" class="input-base" v-model="modelParams.max_leaf_nodes" />
+                <input type="number" class="input-base" v-model="modelParams.tree_params.max_leaf_nodes" />
             </label>
             <br />
             <label class="ml-12 text-2xl">
                 Minimal impurity decrease
-                <input type="number" step="any" class="input-base" v-model="modelParams.min_impurity_decrease" />
+                <input type="number" step="any" class="input-base" v-model="modelParams.tree_params.min_impurity_decrease" />
             </label>
             <br />
             <label class="ml-12 text-2xl">
                 Cost-Complexity Pruning parameter
-                <input type="number" step="any" class="input-base" v-model="modelParams.ccp_alpha" />
+                <input type="number" step="any" class="input-base" v-model="modelParams.tree_params.ccp_alpha" />
             </label>
             <div class="font-semibold text-2xl mt-4">
-                <button class="button-container button-ready" @click="submitForm">Submit</button>
+                <button type="submit" class="button-container button-ready">Submit</button>
             </div>
         </div>
         </form>
@@ -114,28 +114,30 @@ export default {
       activeStep: 1,
       noMaxDepth: false,
       modelParams: {
-        model_type: null,
-
-        n_estimators: null,
-        learning_rate: null,
-        max_depth: null,
-        feature_subsample_size: null,
-
-        splitter: null,
-        min_samples_split: null,
-        min_samples_leaf: null,
-        min_weight_fraction_leaf: null,
-        max_features: null,
-        random_state: null,
-        max_leaf_nodes: null,
-        min_impurity_decrease: null,
-        ccp_alpha: null,
+        model_type: undefined,
+        ensemble_params: {
+            n_estimators: undefined,
+            learning_rate: undefined,
+            max_depth: undefined,
+            feature_subsample_size: undefined,
+        },
+        tree_params: {
+            splitter: undefined,
+            min_samples_split: undefined,
+            min_samples_leaf: undefined,
+            min_weight_fraction_leaf: undefined,
+            max_features: undefined,
+            random_state: undefined,
+            max_leaf_nodes: undefined,
+            min_impurity_decrease: undefined,
+            ccp_alpha: undefined,
+        },
       },
     };
   },
   computed: {
     isEnsParamsValid() {
-      return this.modelParams.n_estimators && (this.noMaxDepth || this.modelParams.max_depth);
+      return this.modelParams.ensemble_params.n_estimators && (this.noMaxDepth || this.modelParams.ensemble_params.max_depth);
     },
   },
   methods: {
@@ -144,8 +146,18 @@ export default {
         this.activeStep++;
       }
     },
-    submitForm() {
-      // Handle form submission logic here
+    async submitForm() {
+        try {
+            const response = await $fetch('http://localhost:8000/model/' + this.modelParams.model_type, {
+                method: 'POST',
+                body: JSON.stringify(this.modelParams),
+            });
+            // Handle the response data
+            console.log('Response:', response.data);
+        } catch (error) {
+            console.error('Error:', error);
+            throw error;
+        }
     },
   },
 };
