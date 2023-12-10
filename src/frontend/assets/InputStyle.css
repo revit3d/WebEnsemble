@@ -1,0 +1,13 @@
+.input-disabled {
+    background-color: #d4d4d4;
+}
+.input-base {
+    position: sticky;
+    width: 25%;
+    padding: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    left: 60%;
+}
