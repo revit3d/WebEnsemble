@@ -17,7 +17,7 @@ export default {
   bottom: 0;
   left: 0;
   position: fixed;
-  height: 5vw;
+  height: 5vh;
   width: 100vw;
   user-select: none;
 }
