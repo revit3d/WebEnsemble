@@ -180,7 +180,7 @@ def get_model_info(uuid_task: uuid.UUID,
             model_out_params['val_dataset_file_path']
         )
 
-    if model_db_item.model_name is schemas.ModelType.random_forest:
+    if model_db_item.model_type is schemas.ModelType.random_forest:
         return schemas.RFModelOut(**model_out_params)
     else:
         return schemas.GBModelOut(**model_out_params)
