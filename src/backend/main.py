@@ -1,16 +1,25 @@
 import uuid
 import json
 
-from fastapi import FastAPI, WebSocket, UploadFile, Request, Depends, File
+from fastapi import FastAPI, WebSocket, UploadFile, Request, Form, Depends, File
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
-from schemas import RFModelIn, GBModelIn, ModelName, RFModelOut, GBModelOut, PredictInfoOut
+from schemas import RFModelIn, GBModelIn, ModelType, RFModelOut, GBModelOut, PredictInfoOut
 from database import get_db
 from tasks import fit_model_task
 import crud
 import utils
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.post('/model/random_forest')
@@ -27,7 +36,7 @@ def create_random_forest(model_params: RFModelIn,
     """
     model_db_item = crud.create_model_item(
         db,
-        model_name=ModelName.random_forest,
+        model_name=ModelType.random_forest,
         model_params=model_params,
     )
 
@@ -51,7 +60,7 @@ def create_gradient_boosting(model_params: GBModelIn,
     """
     model_db_item = crud.create_model_item(
         db,
-        model_name=ModelName.gradient_boosting,
+        model_name=ModelType.gradient_boosting,
         model_params=model_params,
     )
 
@@ -63,7 +72,7 @@ def create_gradient_boosting(model_params: GBModelIn,
 
 @app.put('/model/fit/{uuid_task}')
 def put_train_files(uuid_task: uuid.UUID,
-                    target_name: str,
+                    target_name: str = Form(...),
                     train_file: UploadFile = File(...),
                     val_file: UploadFile | None = File(None),
                     db: Session = Depends(get_db)) -> None:
@@ -163,7 +172,7 @@ def get_model_info(uuid_task: uuid.UUID,
             model_out_params['val_dataset_file_path']
         )
 
-    if model_db_item.model_name is ModelName.random_forest:
+    if model_db_item.model_name is ModelType.random_forest:
         return RFModelOut(**model_out_params)
     else:
         return GBModelOut(**model_out_params)
