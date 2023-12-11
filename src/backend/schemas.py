@@ -4,7 +4,7 @@ from enum import Enum
 from pydantic import BaseModel, HttpUrl
 
 
-class ModelName(str, Enum):
+class ModelType(str, Enum):
     random_forest = 'random_forest'
     gradient_boosting = 'gradient_boosting'
 
@@ -35,16 +35,17 @@ class RFParams(BaseModel):
 class GBParams(BaseModel):
     n_estimators: int
     learning_rate: float = 0.1
-    max_depth: int = 5
+    max_depth: int | None = 5
     feature_subsample_size: float | None = None
 
 
 class MLModelBase(BaseModel):
-    pass
+    model_name: str
 
 
 class MLModelOut(MLModelBase):
     uuid: uuid.UUID
+    is_trained: bool = False
     train_dataset_file_path: HttpUrl | None = None
     val_dataset_file_path: HttpUrl | None = None
     train_loss: list | None = None
@@ -62,12 +63,16 @@ class GBModelIn(MLModelBase):
 
 
 class RFModelOut(RFModelIn, MLModelOut):
-    pass
+    model_type: ModelType = ModelType.random_forest
 
 
 class GBModelOut(GBModelIn, MLModelOut):
-    pass
+    model_type: ModelType = ModelType.gradient_boosting
 
 
 class PredictInfoOut(BaseModel):
-    y_preds: list
+    preds_file_path: HttpUrl
+
+
+class ModelNames(BaseModel):
+    model_names: list

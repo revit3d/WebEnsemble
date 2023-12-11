@@ -1,21 +1,33 @@
 import uuid
 import json
+import time
 
-from fastapi import FastAPI, WebSocket, UploadFile, Request, Depends, File
+import numpy as np
+
+from fastapi import FastAPI, WebSocket, UploadFile, Request, Form, Depends, File
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
-from schemas import RFModelIn, GBModelIn, ModelName, RFModelOut, GBModelOut, PredictInfoOut
 from database import get_db
 from tasks import fit_model_task
 import crud
+import schemas
 import utils
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.post('/model/random_forest')
-def create_random_forest(model_params: RFModelIn,
-                         db: Session = Depends(get_db)) -> RFModelOut:
+def create_random_forest(model_params: schemas.RFModelIn,
+                         db: Session = Depends(get_db)) -> schemas.RFModelOut:
     """
     Create new record of random forest model in \'ml_models\' table with\\
     passed parameters.
@@ -27,19 +39,19 @@ def create_random_forest(model_params: RFModelIn,
     """
     model_db_item = crud.create_model_item(
         db,
-        model_name=ModelName.random_forest,
+        model_type=schemas.ModelType.random_forest,
         model_params=model_params,
     )
 
-    return RFModelOut(
+    return schemas.RFModelOut(
         uuid=model_db_item.id,
         **json.loads(model_db_item.model_parameters),
     )
 
 
 @app.post('/model/gradient_boosting')
-def create_gradient_boosting(model_params: GBModelIn,
-                             db: Session = Depends(get_db)) -> GBModelOut:
+def create_gradient_boosting(model_params: schemas.GBModelIn,
+                             db: Session = Depends(get_db)) -> schemas.GBModelOut:
     """
     Create new record of gradient boosting model in \'ml_models\' table with\\
     passed parameters.
@@ -51,11 +63,11 @@ def create_gradient_boosting(model_params: GBModelIn,
     """
     model_db_item = crud.create_model_item(
         db,
-        model_name=ModelName.gradient_boosting,
+        model_type=schemas.ModelType.gradient_boosting,
         model_params=model_params,
     )
 
-    return GBModelOut(
+    return schemas.GBModelOut(
         uuid=model_db_item.id,
         **json.loads(model_db_item.model_parameters),
     )
@@ -63,7 +75,7 @@ def create_gradient_boosting(model_params: GBModelIn,
 
 @app.put('/model/fit/{uuid_task}')
 def put_train_files(uuid_task: uuid.UUID,
-                    target_name: str,
+                    target_name: str = Form(...),
                     train_file: UploadFile = File(...),
                     val_file: UploadFile | None = File(None),
                     db: Session = Depends(get_db)) -> None:
@@ -114,8 +126,9 @@ async def fit_model(websocket: WebSocket,
 
 @app.post('/model/predict/{uuid_task}')
 def predict(uuid_task: uuid.UUID,
+            request: Request,
             test_file: UploadFile = File(...),
-            db: Session = Depends(get_db)) -> PredictInfoOut:
+            db: Session = Depends(get_db)) -> schemas.PredictInfoOut:
     """
     Predict target for passed data.
 
@@ -132,13 +145,17 @@ def predict(uuid_task: uuid.UUID,
     X_test = utils.validate_csv(test_file)
     y_preds = model.predict(X_test.to_numpy())
 
-    return PredictInfoOut(y_preds=y_preds)
+    preds_file_path = f'storage/predictions/{time.perf_counter_ns()}.csv'
+    np.savetxt(preds_file_path, y_preds, delimiter=',')
+    preds_file_path = utils.convert_to_http_url(request, preds_file_path)
+
+    return schemas.PredictInfoOut(preds_file_path=preds_file_path)
 
 
 @app.get('/model/{uuid_task}')
 def get_model_info(uuid_task: uuid.UUID,
                    request: Request,
-                   db: Session = Depends(get_db)) -> RFModelOut | GBModelOut:
+                   db: Session = Depends(get_db)) -> schemas.RFModelOut | schemas.GBModelOut:
     """
     Return metadata about the model associated with the passed uuid.
 
@@ -163,7 +180,16 @@ def get_model_info(uuid_task: uuid.UUID,
             model_out_params['val_dataset_file_path']
         )
 
-    if model_db_item.model_name is ModelName.random_forest:
-        return RFModelOut(**model_out_params)
+    if model_db_item.model_type is schemas.ModelType.random_forest:
+        return schemas.RFModelOut(**model_out_params)
     else:
-        return GBModelOut(**model_out_params)
+        return schemas.GBModelOut(**model_out_params)
+
+
+@app.get('/models/list')
+def get_model_names(db: Session = Depends(get_db)) -> schemas.ModelNames:
+    """Return list with all models' names"""
+    model_db_items = crud.read_model_names(db)
+    return schemas.ModelNames(model_names=[
+        model_db_item.model_name for model_db_item in model_db_items
+    ])

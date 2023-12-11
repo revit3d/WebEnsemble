@@ -26,7 +26,7 @@ def validate_csv(file: UploadFile, target_name=None) -> pd.DataFrame:
         data = pd.read_csv(file.file)
         file.file.close()
         if target_name is not None:
-            data = data[target_name]
+            _ = data[target_name]
     except (pd.errors.ParserError, KeyError) as exc:
         raise HTTPException(422, detail=f'Bad file format for file {file.filename}') from exc
 
@@ -55,6 +55,7 @@ def deserialize(model_db_item: models.MLModel):
     model_out_params = {
         'uuid': model_db_item.id,
         'model_name': model_db_item.model_name,
+        'model_type': model_db_item.model_type,
         **json.loads(model_db_item.model_parameters),
         'is_trained': model_db_item.is_trained,
         'model_deserialized': model_deserialized,

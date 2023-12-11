@@ -1,8 +1,8 @@
 """Init
 
-Revision ID: 5dec3a5a8cca
+Revision ID: 2a37ab2f9992
 Revises: 
-Create Date: 2023-12-03 12:48:45.926887
+Create Date: 2023-12-12 00:30:25.099405
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '5dec3a5a8cca'
+revision = '2a37ab2f9992'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,9 +21,11 @@ def upgrade() -> None:
     op.create_table('ml_models',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('model_name', sa.String(), nullable=False),
+    sa.Column('model_type', sa.String(), nullable=False),
     sa.Column('model_parameters', postgresql.JSON(astext_type=sa.Text()), nullable=False),
     sa.Column('is_trained', sa.Boolean(), nullable=False),
     sa.Column('model_serialized', sa.LargeBinary(), nullable=True),
+    sa.Column('target_name', sa.String(), nullable=True),
     sa.Column('train_dataset_file_path', sa.String(), nullable=True),
     sa.Column('val_dataset_file_path', sa.String(), nullable=True),
     sa.Column('train_loss', sa.LargeBinary(), nullable=True),
