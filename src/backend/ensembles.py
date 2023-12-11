@@ -92,7 +92,7 @@ class RandomForestMSE:
             self,
             X: np.ndarray,
             y: np.ndarray,
-            estimator: DecisionTreeRegressor) -> DecisionTreeRegressor:
+            estimator: DecisionTreeRegressor):
         """
         Perform fitting of a single estimator with feature selection and bagging
         """
@@ -197,21 +197,21 @@ class GradientBoostingMSE:
                 max_depth=self._max_depth,
                 **self._tree_params,
             )
-            estimator.fit(X, residuals)
+            estimator, ftrs_subsample = self._fit_estimator(X, residuals, estimator)
 
             # find new approximation for predicions
-            approx = estimator.predict(X)
+            approx = estimator.predict(X[:, ftrs_subsample])
 
             # find next optimization step value
             alpha = minimize_scalar(
-                fun=lambda x, p=preds, ap=approx, : np.mean((p + x * ap - y) ** 2),
+                fun=lambda x, p=preds, ap=approx, : np.mean(np.square(p + x * ap - y)),
                 bounds=(0, 1e9),
             ).x
 
             # update predictions vector
             preds = preds + self._lr * alpha * approx
 
-            self._models.append((estimator, alpha))
+            self._models.append((estimator, self._lr * alpha, ftrs_subsample))
 
         train_loss = self._calc_loss(X, y)
 
@@ -239,6 +239,25 @@ class GradientBoostingMSE:
         )
         return np.sum(preds, axis=0)
 
+    def _fit_estimator(self,
+                       X: np.ndarray,
+                       y: np.ndarray,
+                       estimator: DecisionTreeRegressor):
+        """
+        Perform fitting of a single estimator with feature selection
+        """
+        ftr_subsample_size = int(self._feature_subsample_size * X.shape[1])
+        ftrs_subsample = np.random.choice(
+            np.arange(X.shape[1]),
+            size=ftr_subsample_size,
+            replace=False
+        )
+
+        X_sub = X[:, ftrs_subsample]
+
+        estimator.fit(X_sub, y)
+        return estimator, ftrs_subsample
+
     def _run_estimator(self,
                        X: np.ndarray,
                        estimator: Tuple[DecisionTreeRegressor, float]) -> np.ndarray:
@@ -249,8 +268,8 @@ class GradientBoostingMSE:
         - X: array of size n_objects, n_features - the input samples
         - estimator: tuple (model, model importance [alpha])
         """
-        estimator, alpha = estimator
-        return alpha * estimator.predict(X)
+        estimator, alpha, ftrs_subsample = estimator
+        return alpha * estimator.predict(X[:, ftrs_subsample])
 
     def _calc_loss(self, X: np.ndarray, y: np.ndarray):
         preds = Parallel(n_jobs=-1)(
