@@ -1,15 +1,17 @@
 <template>
-    <div v-if="!isPredsAvailable">
-        <form @submit.prevent="uploadFile">
-            <p class="p-6 text-5xl font-bold tracking-wider m-3">Make predictions</p>
-            <p class="font-semibold text-3xl tracking-wide mb-5">Upload dataset file</p>
-            <input type="file" @change="handleTestFileUpload" class="mb-6" />
-            <button type="submit" :class="[isFileUploaded ? 'button-ready' : 'button-waiting', 'button-container', 'font-semibold', 'text-2xl', 'mt-4']" :disabled="!isFileUploaded">Submit</button>
-        </form>
-    </div>
+    <div>
+        <div v-if="!isPredsAvailable">
+            <form @submit.prevent="uploadFile">
+                <p class="p-6 text-5xl font-bold tracking-wider m-3">Make predictions</p>
+                <p class="font-semibold text-3xl tracking-wide mb-5">Upload dataset file</p>
+                <input type="file" @change="handleTestFileUpload" class="mb-6" />
+                <button type="submit" :class="[isFileUploaded ? 'button-ready' : 'button-waiting', 'button-container', 'font-semibold', 'text-2xl', 'mt-4']" :disabled="!isFileUploaded">Submit</button>
+            </form>
+        </div>
 
-    <div v-if="isPredsAvailable">
-        <p>{{ this.predictions }}</p>
+        <div v-if="isPredsAvailable">
+            <p>{{ this.predictions }}</p>
+        </div>
     </div>
 </template>
 
@@ -42,8 +44,8 @@
                         method: 'POST',
                         body: formData,
                     });
-                    console.log('Response:', response.data);
-                    this.predictions = response.data;
+                    console.log('Response:', response);
+                    this.predictions = response;
                 } catch (error) {
                     console.error('Error:', error);
                     throw error;
