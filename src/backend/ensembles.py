@@ -138,7 +138,8 @@ class RandomForestMSE:
         preds = Parallel(n_jobs=-1)(
             delayed(self._run_estimator)(X, model) for model in self._models
         )
-        loss = np.mean(np.square(preds - y), axis=1)
+        preds = np.cumsum(preds, axis=0).T / (1 + np.arange(self._n_estimators))
+        loss = np.mean(np.square(preds.T - y), axis=1)
         return loss
 
 
@@ -275,5 +276,6 @@ class GradientBoostingMSE:
         preds = Parallel(n_jobs=-1)(
             delayed(self._run_estimator)(X, model) for model in self._models
         )
+        preds = np.cumsum(preds, axis=0)
         loss = np.mean(np.square(preds - y), axis=1)
         return loss
