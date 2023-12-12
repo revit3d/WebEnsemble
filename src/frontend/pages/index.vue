@@ -5,5 +5,6 @@
 </template>
 
 <script setup>
-    await navigateTo('/home')
+    await navigateTo('/home');
+    location.reload();
 </script>
