@@ -26,7 +26,7 @@ def validate_csv(file: UploadFile, target_name=None) -> pd.DataFrame:
         data = pd.read_csv(file.file)
         file.file.close()
         if target_name is not None:
-            data = data[target_name]
+            _ = data[target_name]
     except (pd.errors.ParserError, KeyError) as exc:
         raise HTTPException(422, detail=f'Bad file format for file {file.filename}') from exc
 

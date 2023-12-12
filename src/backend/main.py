@@ -1,5 +1,8 @@
 import uuid
 import json
+import time
+
+import numpy as np
 
 from fastapi import FastAPI, WebSocket, UploadFile, Request, Form, Depends, File
 from fastapi.middleware.cors import CORSMiddleware
@@ -123,6 +126,7 @@ async def fit_model(websocket: WebSocket,
 
 @app.post('/model/predict/{uuid_task}')
 def predict(uuid_task: uuid.UUID,
+            request: Request,
             test_file: UploadFile = File(...),
             db: Session = Depends(get_db)) -> schemas.PredictInfoOut:
     """
@@ -141,7 +145,11 @@ def predict(uuid_task: uuid.UUID,
     X_test = utils.validate_csv(test_file)
     y_preds = model.predict(X_test.to_numpy())
 
-    return schemas.PredictInfoOut(y_preds=y_preds)
+    preds_file_path = f'storage/predictions/{time.perf_counter_ns()}.csv'
+    np.savetxt(preds_file_path, y_preds, delimiter=',')
+    preds_file_path = utils.convert_to_http_url(request, preds_file_path)
+
+    return schemas.PredictInfoOut(preds_file_path=preds_file_path)
 
 
 @app.get('/model/{uuid_task}')

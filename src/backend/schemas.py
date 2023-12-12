@@ -71,7 +71,7 @@ class GBModelOut(GBModelIn, MLModelOut):
 
 
 class PredictInfoOut(BaseModel):
-    y_preds: list
+    preds_file_path: HttpUrl
 
 
 class ModelNames(BaseModel):
