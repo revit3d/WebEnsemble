@@ -1,7 +1,13 @@
 <template>
     <div>
-        <p class="p-6 text-5xl font-bold tracking-wider m-3">Model {{ $route.params.id }} info</p>
-        <p class="text-3xl font-semibold tracking-wide m-3">Model status: </p>
+        <p class="p-6 text-5xl font-bold tracking-wider m-3">Model <label class="text-emerald-700"> {{ modelParams.model_name }} </label> info</p>
+        <div class="text-3xl tracking-wide m-3">
+            <label class="font-semibold mr-4">Model status:</label>
+            <span :class="['dot-container', {'dot-green': isModelFitted, 'dot-yellow': isModelFitting,'dot-red': !isModelFitting}, 'mr-2']"></span>
+            <label v-if="isModelFitted">Fitted</label>
+            <label v-if="isModelFitting && !isModelFitted">Fitting</label>
+            <label v-if="!isModelFitting && !isModelFitted">Not fitted</label>
+        </div>
         <p class="text-3xl font-semibold tracking-wide m-3">Model parameters</p>
 
         <div class="ml-12 text-2xl">
@@ -134,34 +140,13 @@
 
 <script>
 export default defineNuxtComponent ({
-    data() {
-        return {
-            modelParams: {
-                model_type: 'gradient_boosting',
-                is_trained: true,
-                ensemble_params: {
-                    n_estimators: 'None',
-                    learning_rate: 'None',
-                    max_depth: 'None',
-                    feature_subsample_size: 'None',
-                },
-                tree_params: {
-                    splitter: 'None',
-                    min_samples_split: 'None',
-                    min_samples_leaf: 'None',
-                    min_weight_fraction_leaf: 'None',
-                    max_features: 'None',
-                    random_state: 'None',
-                    max_leaf_nodes: 'None',
-                    min_impurity_decrease: 'None',
-                    ccp_alpha: 'None',
-                },
-            },
-        };
-    },
     computed: {
         isModelFitted() {
             return this.modelParams.is_trained;
+        },
+        isModelFitting() {
+            console.log(this.modelParams)
+            return (this.modelParams.train_dataset_file_path !== null) && !this.modelParams.is_trained;
         },
     },
     async asyncData({ _route }) {
@@ -176,19 +161,19 @@ export default defineNuxtComponent ({
             throw error;
         }
     },
-    mounted() {
-        const websocket = new WebSocket('ws://localhost:8000/model/fit');
+    // mounted() {
+    //     const websocket = new WebSocket('ws://localhost:8000/model/fit');
 
-        websocket.onmessage = () => {}
-    }
+    //     websocket.onmessage = () => {}
+    // }
 })
 </script>
 
 <style scoped>
 @import '@/assets/ButtonStyle.css';
-        .output-base {
+@import '@/assets/DotStyle.css';
+    .output-base {
         display:inline-block;
-        position: relative;
         height: 100%;
         width: 60%;
         padding: 8px;
