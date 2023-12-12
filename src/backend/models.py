@@ -17,6 +17,7 @@ class MLModel(Base):
         nullable=False,
     )
     model_name = Column(String, nullable=False)
+    model_type = Column(String, nullable=False)
     model_parameters = Column(JSON, nullable=False)
     is_trained = Column(Boolean, nullable=False, default=False)
     model_serialized = Column(LargeBinary, nullable=True)

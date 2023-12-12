@@ -40,7 +40,7 @@ class GBParams(BaseModel):
 
 
 class MLModelBase(BaseModel):
-    pass
+    model_name: str
 
 
 class MLModelOut(MLModelBase):
@@ -72,3 +72,7 @@ class GBModelOut(GBModelIn, MLModelOut):
 
 class PredictInfoOut(BaseModel):
     y_preds: list
+
+
+class ModelNames(BaseModel):
+    model_names: list

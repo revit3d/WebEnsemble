@@ -17,9 +17,9 @@ def fit_model_task(model_item_deserialized: dict):
     ensemble_params = model_item_deserialized['ensemble_params']
     tree_params = model_item_deserialized['tree_params']
     target_name = model_item_deserialized['target_name']
-    model_name = model_item_deserialized['model_name']
+    model_type = model_item_deserialized['model_type']
 
-    if model_name == schemas.ModelName.random_forest:
+    if model_type == schemas.ModelType.random_forest:
         model = RandomForestMSE(
             **ensemble_params,
             **tree_params,

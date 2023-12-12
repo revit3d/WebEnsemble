@@ -55,6 +55,7 @@ def deserialize(model_db_item: models.MLModel):
     model_out_params = {
         'uuid': model_db_item.id,
         'model_name': model_db_item.model_name,
+        'model_type': model_db_item.model_type,
         **json.loads(model_db_item.model_parameters),
         'is_trained': model_db_item.is_trained,
         'model_deserialized': model_deserialized,

@@ -24,7 +24,7 @@ def get_object_or_404(func):
 
 
 def create_model_item(db: Session,
-                      model_name: str,
+                      model_type: schemas.ModelType,
                       model_params: schemas.RFModelIn | schemas.GBModelIn) -> models.MLModel:
     """
     Create a new record in the \'ml_models\' table.
@@ -32,11 +32,12 @@ def create_model_item(db: Session,
     Parameters:
     -------
     - db: database session
-    - model_name: model architecture name
+    - model_type: model architecture
     - model_params: parameters of the defined model
     """
     db_item = models.MLModel(
-        model_name=model_name,
+        model_name=model_params.model_name,
+        model_type=model_type,
         model_parameters=model_params.model_dump_json(),
     )
     db.add(db_item)
@@ -49,6 +50,11 @@ def create_model_item(db: Session,
 def read_model_item(db: Session, uuid: UUID) -> models.MLModel:
     """Return model with the given uuid from the \'ml_models\' table"""
     return db.query(models.MLModel).where(models.MLModel.id == uuid).first()
+
+
+def read_model_names(db: Session) -> list:
+    """Return list of model names"""
+    return db.query(models.MLModel.model_name).all()
 
 
 def delete_model(db: Session, uuid: UUID) -> None:
