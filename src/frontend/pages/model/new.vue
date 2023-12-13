@@ -99,8 +99,19 @@
                 Cost-Complexity Pruning parameter
                 <input type="number" step="any" class="input-base" v-model="modelParams.tree_params.ccp_alpha" />
             </label>
+            <div v-show="activeStep === 3" class="font-semibold text-2xl mt-8">
+                <button type="button" class="button-ready button-container" @click="nextStep">Next</button>
+            </div>
+        </div>
+        <div v-show="activeStep > 3">
+            <p class="font-semibold text-3xl tracking-wide mt-10 mb-5">Step 4: Choose a name for your model</p>
+            <label class="ml-12 text-2xl">
+                Model name
+                <input type="text" class="input-base" v-model="modelParams.model_name" />
+            </label>
+
             <div class="font-semibold text-2xl mt-4">
-                <button type="submit" class="button-container button-ready">Submit</button>
+                <button type="submit" :class="[isNameValid ? 'button-ready' : 'button-waiting', 'button-container']" :disabled="!isNameValid">Submit</button>
             </div>
         </div>
         </form>
@@ -108,12 +119,13 @@
 </template>
 
 <script>
-export default {
+export default defineNuxtComponent({
   data() {
     return {
       activeStep: 1,
       noMaxDepth: false,
       modelParams: {
+        model_name: undefined,
         model_type: undefined,
         ensemble_params: {
             n_estimators: undefined,
@@ -139,10 +151,13 @@ export default {
     isEnsParamsValid() {
       return this.modelParams.ensemble_params.n_estimators && (this.noMaxDepth || this.modelParams.ensemble_params.max_depth);
     },
+    isNameValid() {
+        return this.modelParams.model_name;
+    },
   },
   methods: {
     nextStep() {
-      if (this.activeStep < 3) {
+      if (this.activeStep < 4) {
         this.activeStep++;
       }
     },
@@ -152,15 +167,16 @@ export default {
                 method: 'POST',
                 body: JSON.stringify(this.modelParams),
             });
-            // Handle the response data
-            console.log('Response:', response.data);
+            console.log('/model/' + response.uuid);
+            await navigateTo('/model/' + response.uuid);
+            location.reload();
         } catch (error) {
             console.error('Error:', error);
             throw error;
         }
     },
   },
-};
+});
 </script>
 
 <style scoped>
