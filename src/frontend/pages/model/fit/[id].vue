@@ -16,47 +16,52 @@
 </template>
 
 <script>
-    export default {
-        data() {
-            return {
-                target_name: undefined,
-                trainFile: undefined,
-                valFile: undefined,
-            };
+export default {
+    data() {
+        return {
+            target_name: undefined,
+            trainFile: undefined,
+            valFile: undefined,
+        };
+    },
+    computed: {
+        isTrainUploaded() {
+            return this.target_name && this.trainFile;
         },
-        computed: {
-            isTrainUploaded() {
-                return this.target_name && this.trainFile;
-            },
+    },
+    methods: {
+        handleTrainFileUpload(event) {
+            this.trainFile = event.target.files[0];
         },
-        methods: {
-            handleTrainFileUpload(event) {
-                this.trainFile = event.target.files[0];
-            },
-            handleValFileUpload(event) {
-                this.valFile = event.target.files[0];
-            },
-            async uploadFiles() {
-                const formData = new FormData();
-                formData.append('train_file', this.trainFile);
-                if (this.valFile !== undefined) {
-                    formData.append('val_file', this.valFile);
-                }
-                formData.append('target_name', this.target_name);
+        handleValFileUpload(event) {
+            this.valFile = event.target.files[0];
+        },
+        async uploadFiles() {
+            const formData = new FormData();
+            formData.append('train_file', this.trainFile);
+            if (this.valFile !== undefined) {
+                formData.append('val_file', this.valFile);
+            }
+            formData.append('target_name', this.target_name);
 
-                try {
-                    const response = await $fetch('http://localhost:8000/model/fit/' + this.$route.params.id, {
-                        method: 'PUT',
-                        body: formData,
-                    });
-                    navigateTo('/model/' + this.$route.params.id);
-                } catch (error) {
-                    console.error('Error:', error);
-                    throw error;
+            try {
+                const response = await $fetch('http://localhost:8000/model/fit/' + this.$route.params.id, {
+                    method: 'PUT',
+                    body: formData,
+                });
+                // create a websocket to start fitting
+                const websocket = new WebSocket('ws://localhost:8000/model/fit');
+                websocket.onopen = async () => {
+                    websocket.send(this.$route.params.id);
                 }
-            },
+                await navigateTo('/model/' + this.$route.params.id);
+            } catch (error) {
+                console.error('Error:', error);
+                throw error;
+            }
         },
-    };
+    },
+};
 </script>
 
 <style scoped>
