@@ -49,13 +49,11 @@
                         method: 'PUT',
                         body: formData,
                     });
-                    //console.log('Response:', response.data);
                     navigateTo('/model/' + this.$route.params.id);
                 } catch (error) {
                     console.error('Error:', error);
                     throw error;
                 }
-
             },
         },
     };

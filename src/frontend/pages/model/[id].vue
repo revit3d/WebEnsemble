@@ -139,20 +139,20 @@
 </template>
 
 <script>
-export default defineNuxtComponent ({
+export default defineNuxtComponent({
     computed: {
         isModelFitted() {
             return this.modelParams.is_trained;
         },
         isModelFitting() {
-            console.log(this.modelParams)
             return (this.modelParams.train_dataset_file_path !== null) && !this.modelParams.is_trained;
         },
     },
-    async asyncData({ _route }) {
+    async asyncData ({ payload }) {
+        console.log(payload.path);
         try {
-            const response = await $fetch('http://localhost:8000/model/' + _route.params.id);
-            console.log(response)
+            const response = await $fetch('http://localhost:8000' + payload.path);
+            console.log(response);
             return {
                 modelParams: response,
             };
@@ -161,12 +161,7 @@ export default defineNuxtComponent ({
             throw error;
         }
     },
-    // mounted() {
-    //     const websocket = new WebSocket('ws://localhost:8000/model/fit');
-
-    //     websocket.onmessage = () => {}
-    // }
-})
+});
 </script>
 
 <style scoped>
