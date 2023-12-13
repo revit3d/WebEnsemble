@@ -187,9 +187,16 @@ def get_model_info(uuid_task: uuid.UUID,
 
 
 @app.get('/models/list')
-def get_model_names(db: Session = Depends(get_db)) -> schemas.ModelNames:
+def get_model_names(db: Session = Depends(get_db)) -> schemas.ModelStatuses:
     """Return list with all models' names"""
     model_db_items = crud.read_model_names(db)
-    return schemas.ModelNames(model_names=[
-        model_db_item.model_name for model_db_item in model_db_items
+    print(model_db_items)
+    return schemas.ModelStatuses(models=[
+        (
+            model_db_item.id,
+            model_db_item.model_name,
+            model_db_item.is_trained,
+            model_db_item.target_name,
+        )
+        for model_db_item in model_db_items
     ])

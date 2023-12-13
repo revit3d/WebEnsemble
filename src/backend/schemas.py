@@ -29,14 +29,14 @@ class TreeParams(BaseModel):
 class RFParams(BaseModel):
     n_estimators: int
     max_depth: int | None = None
-    feature_subsample_size: float | None = None
+    feature_subsample_size: float | None = 0.33
 
 
 class GBParams(BaseModel):
     n_estimators: int
     learning_rate: float = 0.1
     max_depth: int | None = 5
-    feature_subsample_size: float | None = None
+    feature_subsample_size: float | None = 0.33
 
 
 class MLModelBase(BaseModel):
@@ -74,5 +74,7 @@ class PredictInfoOut(BaseModel):
     preds_file_path: HttpUrl
 
 
-class ModelNames(BaseModel):
-    model_names: list
+class ModelStatuses(BaseModel):
+    # id, model name, train target, is fitted
+    # train target is needed to check if the model started fitting
+    models: list[tuple[uuid.UUID, str, bool, str | None]]

@@ -54,7 +54,12 @@ def read_model_item(db: Session, uuid: UUID) -> models.MLModel:
 
 def read_model_names(db: Session) -> list:
     """Return list of model names"""
-    return db.query(models.MLModel.model_name).all()
+    return db.query(
+        models.MLModel.id,
+        models.MLModel.model_name,
+        models.MLModel.target_name,
+        models.MLModel.is_trained,
+    ).all()
 
 
 def delete_model(db: Session, uuid: UUID) -> None:
