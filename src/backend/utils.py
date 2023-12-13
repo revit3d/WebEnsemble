@@ -69,7 +69,7 @@ def deserialize(model_db_item: models.MLModel):
     return model_out_params
 
 
-def convert_to_http_url(request: Request, file_path: str) -> HttpUrl:
+def convert_to_http_url(request: Request, file_path: str | None) -> HttpUrl:
     """
     Convert file_path to http url for nginx
 
@@ -78,5 +78,7 @@ def convert_to_http_url(request: Request, file_path: str) -> HttpUrl:
     - request: fastapi request from the user
     - file_path: path to requested file
     """
+    if file_path is None:
+        return None
     url = request.url
     return HttpUrl(f'{url.scheme}://{url.netloc}/{file_path}')
