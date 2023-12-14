@@ -34,12 +34,13 @@
 </script>
 
 <style scoped>
-    .header {
-        left: 0;
-        top: 0;
-        height: 6vh;
-        position: fixed;
-        width: 100vw;
-        user-select: none;
-    }
+.header {
+    left: 0;
+    top: 0;
+    height: 6vh;
+    position: fixed;
+    width: 100vw;
+    user-select: none;
+    z-index: 100;
+}
 </style>

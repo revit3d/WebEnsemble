@@ -16,9 +16,7 @@ export default {
 .footer {
   bottom: 0;
   left: 0;
-  position: fixed;
   height: 5vh;
-  width: 100vw;
   user-select: none;
 }
 </style>

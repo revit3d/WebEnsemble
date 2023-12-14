@@ -149,10 +149,8 @@ export default defineNuxtComponent({
         },
     },
     async asyncData ({ payload }) {
-        console.log(payload.path);
         try {
             const response = await $fetch('http://localhost:8000' + payload.path);
-            console.log(response);
             return {
                 modelParams: response,
             };

@@ -1,7 +1,7 @@
 <template>
-  <div class="background">
+  <div class="grid content-between" style="min-height: 100vh">
     <Header />
-    <router-view class="p-20"></router-view>
+    <router-view class="p-20 background"></router-view>
     <Footer />
   </div>
 </template>
@@ -35,8 +35,11 @@ export default {
 };
 </script>
 
-<style scoped>
-.background {
+<style>
+body, html {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
   background: rgb(105,255,251);
   background: linear-gradient(153deg, rgba(105,255,251,1) 0%, rgba(173,145,255,1) 100%);
 }
