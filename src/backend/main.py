@@ -1,20 +1,27 @@
 import uuid
 import json
 import time
+import asyncio
 
 import numpy as np
 
-from fastapi import FastAPI, WebSocket, UploadFile, Request, Form, Depends, File
+from fastapi import (
+    FastAPI, WebSocket, UploadFile, Request, 
+    APIRouter, WebSocketDisconnect, Form, Depends, 
+    File
+)
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from database import get_db
 from tasks import fit_model_task
+from sockets import connection_manager
 import crud
 import schemas
 import utils
 
 app = FastAPI()
+router = APIRouter(prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,7 +32,7 @@ app.add_middleware(
 )
 
 
-@app.post('/model/random_forest')
+@router.post('/model/random_forest')
 def create_random_forest(model_params: schemas.RFModelIn,
                          db: Session = Depends(get_db)) -> schemas.RFModelOut:
     """
@@ -49,7 +56,7 @@ def create_random_forest(model_params: schemas.RFModelIn,
     )
 
 
-@app.post('/model/gradient_boosting')
+@router.post('/model/gradient_boosting')
 def create_gradient_boosting(model_params: schemas.GBModelIn,
                              db: Session = Depends(get_db)) -> schemas.GBModelOut:
     """
@@ -73,7 +80,7 @@ def create_gradient_boosting(model_params: schemas.GBModelIn,
     )
 
 
-@app.put('/model/fit/{uuid_task}')
+@router.put('/model/fit/{uuid_task}')
 def put_train_files(uuid_task: uuid.UUID,
                     target_name: str = Form(...),
                     train_file: UploadFile = File(...),
@@ -98,7 +105,7 @@ def put_train_files(uuid_task: uuid.UUID,
     crud.update_model(db, uuid_task, target_name=target_name, train_dataset=train_data, val_dataset=val_data)
 
 
-@app.websocket('/model/fit')
+@router.websocket('/model/fit')
 async def fit_model(websocket: WebSocket,
                     db: Session = Depends(get_db)):
     """
@@ -111,20 +118,35 @@ async def fit_model(websocket: WebSocket,
     - websocker: fastapi websocket
     - db: database session
     """
-    await websocket.accept()
+    await connection_manager.connect(websocket)
 
-    while True:
-        uuid_task = await websocket.receive_text()
+    try:
+        while True:
+            uuid_task = await websocket.receive_text()
 
-        model_db_item = crud.read_model_item(db, uuid=uuid_task)
-        model_item_deserialized = utils.deserialize(model_db_item)
-        fit_results = fit_model_task.delay(model_item_deserialized)
-        model, train_loss, val_loss = fit_results.get()
-        crud.update_model(db, uuid_task, model=model, train_loss=train_loss, val_loss=val_loss)
-        await websocket.send_text(f'model {uuid_task} fit finished')
+            # send message about fitting start
+            model_db_item = crud.update_model(db, uuid_task, is_trained=False)
+            model_status = schemas.ModelStatusElement(
+                id=model_db_item.id,
+                model_name=model_db_item.model_name,
+                is_trained=model_db_item.is_trained,
+                target_name=model_db_item.target_name,
+            ).model_dump_json()
+            await connection_manager.broadcast(model_status)
+
+            fit_task = fit_model_task.delay(uuid_task)
+
+            while not fit_task.ready():
+                await asyncio.sleep(1)
+
+            model_status = fit_task.result
+
+            await connection_manager.broadcast(model_status)
+    except WebSocketDisconnect:
+        connection_manager.disconnect(websocket)
 
 
-@app.post('/model/predict/{uuid_task}')
+@router.post('/model/predict/{uuid_task}')
 def predict(uuid_task: uuid.UUID,
             request: Request,
             test_file: UploadFile = File(...),
@@ -152,7 +174,7 @@ def predict(uuid_task: uuid.UUID,
     return schemas.PredictInfoOut(preds_file_path=preds_file_path)
 
 
-@app.get('/model/{uuid_task}')
+@router.get('/model/{uuid_task}')
 def get_model_info(uuid_task: uuid.UUID,
                    request: Request,
                    db: Session = Depends(get_db)) -> schemas.RFModelOut | schemas.GBModelOut:
@@ -186,17 +208,20 @@ def get_model_info(uuid_task: uuid.UUID,
         return schemas.GBModelOut(**model_out_params)
 
 
-@app.get('/models/list')
+@router.get('/models/list')
 def get_model_names(db: Session = Depends(get_db)) -> schemas.ModelStatuses:
     """Return list with all models' names"""
     model_db_items = crud.read_model_names(db)
     print(model_db_items)
     return schemas.ModelStatuses(models=[
-        (
-            model_db_item.id,
-            model_db_item.model_name,
-            model_db_item.is_trained,
-            model_db_item.target_name,
+        schemas.ModelStatusElement(
+            id=model_db_item.id,
+            model_name=model_db_item.model_name,
+            is_trained=model_db_item.is_trained,
+            target_name=model_db_item.target_name,
         )
         for model_db_item in model_db_items
     ])
+
+
+app.include_router(router)
