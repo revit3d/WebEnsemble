@@ -1,38 +1,41 @@
 <template>
   <div class="grid content-between" style="min-height: 100vh">
     <Header />
-    <router-view class="p-20 background"></router-view>
+    <router-view class="p-20"></router-view>
     <Footer />
   </div>
 </template>
 
 <script>
-  import Header from '@/components/Header.vue';
-  import Footer from '@/components/Footer.vue';
-  import { store } from '@/store';
+import Header from '@/components/Header.vue';
+import Footer from '@/components/Footer.vue';
+import { useStore } from '@/store';
 
-export default {
+export default defineNuxtComponent({
+
   components: {
     Header,
     Footer,
   },
-  async mounted() {
+  asyncData: async () =>  {
+    const store = useStore();
+    await store.fetchData();
+    return {}
+  },
+  mounted() {
     const websocket = new WebSocket('ws://localhost:8000/model/fit');
-    store.dispatch('fetchData');
+    console.log('ya sozdalsya')
 
-    websocket.onmessage = async (event) => {
-      console.log(event);
-      console.log('model fitted: ' + modelId);
-      try {
-        const updatedModelState = await $fetch('http://localhost:8000/model/' + modelId);
-        store.commit('updateModelState', updatedModelState);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        throw error;
-      }
+    websocket.onmessage = ({ data }) => {
+      const store = useStore();
+      const newModelState = JSON.parse(data);
+      store.modelStates = store.modelStates.map((model) => {
+        if (model.id == newModelState.id) { return newModelState; }
+        return model;
+      })
     }
   }
-};
+});
 </script>
 
 <style>

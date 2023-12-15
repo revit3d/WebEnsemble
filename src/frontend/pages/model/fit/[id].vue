@@ -51,7 +51,7 @@ export default {
                 });
                 // create a websocket to start fitting
                 const websocket = new WebSocket('ws://localhost:8000/model/fit');
-                websocket.onopen = async () => {
+                websocket.onopen = () => {
                     websocket.send(this.$route.params.id);
                 }
                 await navigateTo('/model/' + this.$route.params.id);

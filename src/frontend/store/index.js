@@ -1,25 +1,16 @@
-import { createStore } from 'vuex';
+import { defineStore } from 'pinia';
 
-export const store = createStore({
-    state() {
+export const useStore = defineStore('main', {
+    state: () => {
         return {
             modelStates: null
         }
     },
-    mutations: {
-        updateModelState(state, modelState) {
-            state.modelStates[modelState.id] = modelState;
-        },
-        updateModelStates(state, newStates) {
-            state.modelStates = newStates;
-        }
-    },
     actions: {
-        async fetchData({ commit }) {
-            console.log('fetching start data')
+        async fetchData() {
             try {
                 const response = await $fetch('http://localhost:8000/models/list');
-                commit('updateModelStates', response.models);
+                this.modelStates = response.models;
             } catch (error) {
                 console.error('Error fetching data:', error);
             }

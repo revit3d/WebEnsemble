@@ -139,13 +139,19 @@
 </template>
 
 <script>
+import { useStore } from '@/store';
+
 export default defineNuxtComponent({
     computed: {
         isModelFitted() {
-            return this.modelParams.is_trained;
+            const store = useStore();
+            let modelStatus = store.modelStates.find(obj => obj.id === this.$route.params.id);
+            return modelStatus.is_trained;
         },
         isModelFitting() {
-            return (this.modelParams.train_dataset_file_path !== null) && !this.modelParams.is_trained;
+            const store = useStore();
+            let modelStatus = store.modelStates.find(obj => obj.id === this.$route.params.id);
+            return (modelStatus.target_name !== null) && !modelStatus.is_trained;
         },
     },
     async asyncData ({ payload }) {
@@ -172,6 +178,7 @@ export default defineNuxtComponent({
         padding: 8px;
         border: 1px solid #ccc;
         border-radius: 5px;
+        background-color: whitesmoke;
     }
     .button-container {
         display: flex;

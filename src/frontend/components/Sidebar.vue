@@ -6,8 +6,8 @@
         <button class="new-model-button" @click="redirectNew()">New model</button>
         <ul v-for="model in modelStates">
           <li>
-            <button @click="redirectModel(model[0])">{{ model[1] }}</button>
-            <span :class="['dot-container', {'dot-green': isModelFitted(model[2]), 'dot-yellow': isModelFitting(model[2], model[3]), 'dot-red': !isModelFitting(model[2], model[3])}, 'ml-2']"></span>
+            <button @click="redirectModel(model.id)">{{ model.model_name }}</button>
+            <span :class="['dot-container', {'dot-green': model.is_trained, 'dot-yellow': (model.target_name !== null) && !model.is_trained, 'dot-red': !((model.target_name !== null) && !model.is_trained)}, 'ml-2']"></span>
           </li>
         </ul>
       </div>
@@ -16,36 +16,31 @@
 </template>
 
 <script>
-import { store } from '@/store';
+import { useStore } from '@/store';
 
-  export default defineNuxtComponent ({
-    props: {
-      isOpen: Boolean,
+export default defineNuxtComponent ({
+  props: {
+    isOpen: Boolean,
+  },
+  computed: {
+    modelStates() {
+      const store = useStore();
+      return store.modelStates;
     },
-    computed: {
-      modelStates() {
-        return store.state.modelStates;
-      }
+  },
+  methods: {
+    toggleSidebar() {
+      props.isOpen = false;
     },
-    methods: {
-      toggleSidebar() {
-        props.isOpen = false;
-      },
-      async redirectModel(model_uuid) {
-        await navigateTo('/model/' + model_uuid);
-        location.reload();
-      },
-      async redirectNew() {
-        await navigateTo('/model/new');
-        location.reload();
-      },
-      isModelFitted(is_trained) {
-        return is_trained;
-      },
-      isModelFitting(is_trained, target_name) {
-        return (target_name !== null) && !is_trained;
-      },
+    async redirectModel(model_uuid) {
+      await navigateTo('/model/' + model_uuid);
+      location.reload();
     },
+    async redirectNew() {
+      await navigateTo('/model/new');
+      location.reload();
+    },
+  },
 });
 </script>
 
