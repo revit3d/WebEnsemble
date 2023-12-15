@@ -13,7 +13,6 @@ class ConnectionManager:
         self.active_connections.remove(websocket)
 
     async def broadcast(self, message: str):
-        print('broadcast')
         for connection in self.active_connections:
             await connection.send_text(message)
 

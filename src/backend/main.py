@@ -104,7 +104,8 @@ def put_train_files(uuid_task: uuid.UUID,
 
 
 @app.websocket('/model/fit')
-async def fit_model(websocket: WebSocket):
+async def fit_model(websocket: WebSocket,
+                    db: Session = Depends(get_db)):
     """
     Fit model on the train data and send notification through the\\
     websocket when the fit finishes and the fitted model is updated\\
@@ -120,13 +121,23 @@ async def fit_model(websocket: WebSocket):
     try:
         while True:
             uuid_task = await websocket.receive_text()
+
+            # send message about fitting start
+            model_db_item = crud.update_model(db, uuid_task, is_trained=False)
+            model_status = schemas.ModelStatusElement(
+                id=model_db_item.id,
+                model_name=model_db_item.model_name,
+                is_trained=model_db_item.is_trained,
+                target_name=model_db_item.target_name,
+            ).model_dump_json()
+            await connection_manager.broadcast(model_status)
+
             fit_task = fit_model_task.delay(uuid_task)
 
             while not fit_task.ready():
                 await asyncio.sleep(1)
 
             model_status = fit_task.result
-            print('result:', model_status)
 
             await connection_manager.broadcast(model_status)
     except WebSocketDisconnect:
