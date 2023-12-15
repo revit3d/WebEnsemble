@@ -44,9 +44,6 @@ class RandomForestMSE:
         - X_val: array of size n_val_objects, n_features
         - y_val: array of size n_val_objects
         """
-        if X_val is not None or y_val is not None:
-            raise NotImplementedError()
-
         # initialize estimators
         models = []
         for _ in range(self._n_estimators):
@@ -182,9 +179,6 @@ class GradientBoostingMSE:
         - X_val: Array of size n_val_objects, n_features
         - y_val: Array of size n_val_objects
         """
-        if X_val is not None or y_val is not None:
-            raise NotImplementedError()
-
         self._models = []
         preds = np.zeros_like(y)
 

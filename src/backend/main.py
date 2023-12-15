@@ -1,15 +1,20 @@
 import uuid
 import json
 import time
+import asyncio
 
 import numpy as np
 
-from fastapi import FastAPI, WebSocket, UploadFile, Request, Form, Depends, File
+from fastapi import (
+    FastAPI, WebSocket, UploadFile, Request, 
+    WebSocketDisconnect, Form, Depends, File
+)
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from database import get_db
 from tasks import fit_model_task
+from sockets import connection_manager
 import crud
 import schemas
 import utils
@@ -99,8 +104,7 @@ def put_train_files(uuid_task: uuid.UUID,
 
 
 @app.websocket('/model/fit')
-async def fit_model(websocket: WebSocket,
-                    db: Session = Depends(get_db)):
+async def fit_model(websocket: WebSocket):
     """
     Fit model on the train data and send notification through the\\
     websocket when the fit finishes and the fitted model is updated\\
@@ -111,17 +115,22 @@ async def fit_model(websocket: WebSocket,
     - websocker: fastapi websocket
     - db: database session
     """
-    await websocket.accept()
+    await connection_manager.connect(websocket)
 
-    while True:
-        uuid_task = await websocket.receive_text()
+    try:
+        while True:
+            uuid_task = await websocket.receive_text()
+            fit_task = fit_model_task.delay(uuid_task)
 
-        model_db_item = crud.read_model_item(db, uuid=uuid_task)
-        model_item_deserialized = utils.deserialize(model_db_item)
-        fit_results = fit_model_task.delay(model_item_deserialized)
-        model, train_loss, val_loss = fit_results.get()
-        crud.update_model(db, uuid_task, model=model, train_loss=train_loss, val_loss=val_loss)
-        await websocket.send_text(f'model {uuid_task} fit finished')
+            while not fit_task.ready():
+                await asyncio.sleep(1)
+
+            model_status = fit_task.result
+            print('result:', model_status)
+
+            await connection_manager.broadcast(model_status)
+    except WebSocketDisconnect:
+        connection_manager.disconnect(websocket)
 
 
 @app.post('/model/predict/{uuid_task}')
@@ -192,11 +201,11 @@ def get_model_names(db: Session = Depends(get_db)) -> schemas.ModelStatuses:
     model_db_items = crud.read_model_names(db)
     print(model_db_items)
     return schemas.ModelStatuses(models=[
-        (
-            model_db_item.id,
-            model_db_item.model_name,
-            model_db_item.is_trained,
-            model_db_item.target_name,
+        schemas.ModelStatusElement(
+            id=model_db_item.id,
+            model_name=model_db_item.model_name,
+            is_trained=model_db_item.is_trained,
+            target_name=model_db_item.target_name,
         )
         for model_db_item in model_db_items
     ])

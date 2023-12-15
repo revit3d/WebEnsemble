@@ -74,7 +74,12 @@ class PredictInfoOut(BaseModel):
     preds_file_path: HttpUrl
 
 
+class ModelStatusElement(BaseModel):
+    id: uuid.UUID
+    model_name: str
+    is_trained: bool
+    target_name: str | None
+
+
 class ModelStatuses(BaseModel):
-    # id, model name, train target, is fitted
-    # train target is needed to check if the model started fitting
-    models: list[tuple[uuid.UUID, str, bool, str | None]]
+    models: list[ModelStatusElement]
