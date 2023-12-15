@@ -1,19 +1,19 @@
 .dot-container {
-    height: 15px;
-    width: 15px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-bottom: 2px;
+  height: 15px;
+  width: 15px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-bottom: 2px;
 }
 
 .dot-red {
-    background-color: #be123c;
+  background-color: #be123c;
 }
 
 .dot-yellow {
-    background-color: #fbbf24;
+  background-color: #fbbf24;
 }
 
 .dot-green {
-    background-color: #166534;
+  background-color: #166534;
 }
