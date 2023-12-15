@@ -1,7 +1,7 @@
 import uuid
 from enum import Enum
 
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel
 
 
 class ModelType(str, Enum):
@@ -46,8 +46,8 @@ class MLModelBase(BaseModel):
 class MLModelOut(MLModelBase):
     uuid: uuid.UUID
     is_trained: bool = False
-    train_dataset_file_path: HttpUrl | None = None
-    val_dataset_file_path: HttpUrl | None = None
+    train_dataset_file_path: str | None = None
+    val_dataset_file_path: str | None = None
     train_loss: list | None = None
     val_loss: list | None = None
 
@@ -71,7 +71,7 @@ class GBModelOut(GBModelIn, MLModelOut):
 
 
 class PredictInfoOut(BaseModel):
-    preds_file_path: HttpUrl
+    preds_file_path: str
 
 
 class ModelStatusElement(BaseModel):
