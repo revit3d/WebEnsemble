@@ -50,8 +50,6 @@ services:
     entrypoint: yarn dev
     expose:
       - 3000
-    env_file:
-      - ./src/frontend/.temp.env
     volumes:
       - ./src/frontend:/app
 
