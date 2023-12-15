@@ -11,7 +11,7 @@ while getopts "buas-:" option; do
     u)
       # Run Docker container
       if [ "$debug" = true ]; then
-        docker compose up --attach backend-api
+        docker compose up
       else
         docker compose up -d
       fi
