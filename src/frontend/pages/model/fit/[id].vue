@@ -47,13 +47,14 @@ export default {
       formData.append('target_name', this.target_name);
 
       try {
-        const response = await $fetch('http://localhost:8000/model/fit/' + this.$route.params.id, {
+        const store = useStore();
+        const apiUrl = process.server ? store.API_URL_SERVER : store.API_URL_CLIENT
+        const response = await $fetch('http://' + apiUrl + '/model/fit/' + this.$route.params.id, {
           method: 'PUT',
           body: formData,
         });
 
         // update model state
-        const store = useStore();
         store.modelStates = store.modelStates.map((model) => {
           if (model.id == this.$route.params.id) {
             model.target_name = this.target_name;
@@ -62,7 +63,7 @@ export default {
         })
 
         // create a websocket to start fitting
-        const websocket = new WebSocket('ws://localhost:8000/model/fit');
+        const websocket = new WebSocket('ws://' + apiUrl + '/model/fit');
         websocket.onopen = () => {
           websocket.send(this.$route.params.id);
         }

@@ -26,6 +26,8 @@
 </template>
 
 <script>
+import { useStore } from '@/store';
+
 export default {
   data() {
     return {
@@ -55,7 +57,9 @@ export default {
       formData.append('test_file', this.testFile);
 
       try {
-        const response = await $fetch('http://localhost:8000/model/predict/' + this.$route.params.id, {
+        const store = useStore();
+        const apiUrl = process.server ? store.API_URL_SERVER : store.API_URL_CLIENT
+        const response = await $fetch('http://' + apiUrl + '/model/predict/' + this.$route.params.id, {
           method: 'POST',
           body: formData,
         });

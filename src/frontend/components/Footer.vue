@@ -18,5 +18,6 @@ export default {
   left: 0;
   height: 5vh;
   user-select: none;
+  z-index: 100;
 }
 </style>

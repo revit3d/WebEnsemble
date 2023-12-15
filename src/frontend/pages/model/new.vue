@@ -119,6 +119,8 @@
 </template>
 
 <script>
+import { useStore } from '@/store';
+
 export default defineNuxtComponent({
   data() {
   return {
@@ -163,7 +165,9 @@ export default defineNuxtComponent({
   },
   async submitForm() {
     try {
-      const response = await $fetch('http://localhost:8000/model/' + this.modelParams.model_type, {
+      const store = useStore();
+      const apiUrl = process.server ? store.API_URL_SERVER : store.API_URL_CLIENT
+      const response = await $fetch('http://' + apiUrl + '/model/' + this.modelParams.model_type, {
         method: 'POST',
         body: JSON.stringify(this.modelParams),
       });

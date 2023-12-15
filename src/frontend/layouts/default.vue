@@ -12,7 +12,6 @@ import Footer from '@/components/Footer.vue';
 import { useStore } from '@/store';
 
 export default defineNuxtComponent({
-
   components: {
     Header,
     Footer,
@@ -23,7 +22,9 @@ export default defineNuxtComponent({
     return {}
   },
   mounted() {
-    const websocket = new WebSocket('ws://localhost:8000/model/fit');
+    const store = useStore();
+    const apiUrl = process.server ? store.API_URL_SERVER : store.API_URL_CLIENT
+    const websocket = new WebSocket('ws://' + apiUrl + '/model/fit');
 
     websocket.onmessage = ({ data }) => {
       const store = useStore();

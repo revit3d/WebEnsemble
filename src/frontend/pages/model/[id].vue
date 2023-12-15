@@ -142,32 +142,31 @@
 import { useStore } from '@/store';
 
 export default defineNuxtComponent({
-  computed: {
-    isModelFitted() {
-      const store = useStore();
-      let modelStatus = store.modelStates.find(obj => obj.id === this.$route.params.id);
-      return modelStatus.is_trained;
+    computed: {
+        isModelFitted() {
+            const store = useStore();
+            let modelStatus = store.modelStates.find(obj => obj.id === this.$route.params.id);
+            return modelStatus.is_trained;
+        },
+        isModelFitting() {
+            const store = useStore();
+            let modelStatus = store.modelStates.find(obj => obj.id === this.$route.params.id);
+            return (modelStatus.target_name !== null) && !modelStatus.is_trained;
+        },
     },
-    isModelFitting() {
-      const store = useStore();
-      let modelStatus = store.modelStates.find(obj => obj.id === this.$route.params.id);
-      return (modelStatus.target_name !== null) && !modelStatus.is_trained;
+    async asyncData ({ payload }) {
+        try {
+            const store = useStore();
+            const apiUrl = process.server ? store.API_URL_SERVER : store.API_URL_CLIENT
+            const response = await $fetch('http://' + apiUrl + payload.path);
+            return {
+                modelParams: response,
+            };
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            throw error;
+        }
     },
-  },
-  async asyncData ({ payload }) {
-    try {
-      const response = await $fetch('http://localhost:8000' + payload.path);
-      return {
-        modelParams: response,
-      };
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      throw createError({
-        statusCode: 404,
-        statusMessage: 'Page Not Found'
-      })
-    }
-  },
 });
 </script>
 
