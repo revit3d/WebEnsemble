@@ -71,6 +71,7 @@ def update_model(db: Session,
                  uuid: UUID,
                  model: ensembles.RandomForestMSE | ensembles.GradientBoostingMSE | None = None,
                  target_name: str | None = None,
+                 is_trained: bool | None = None,
                  train_dataset: pd.DataFrame | None = None,
                  val_dataset: pd.DataFrame | None = None,
                  train_loss: np.ndarray | None = None,
@@ -93,6 +94,8 @@ def update_model(db: Session,
         db_item.train_loss = train_loss.tobytes()
     if val_loss is not None:
         db_item.val_loss = val_loss.tobytes()
+    if is_trained is not None:
+        db_item.is_trained = is_trained
 
     db.commit()
     db.refresh(db_item)

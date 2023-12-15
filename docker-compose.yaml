@@ -4,8 +4,8 @@ services:
     build:
       context: ./src/backend
     entrypoint: "uvicorn main:app --host 0.0.0.0 --reload"
-    ports:
-      - 8000:8000
+    expose:
+      - 8000
     volumes:
       - ./src/backend:/app
     depends_on:
@@ -14,8 +14,9 @@ services:
   postgresql:
     container_name: postgresql
     image: postgres:12
-    ports:
-      - 5432:5432
+    restart: always
+    expose:
+      - 5432
     env_file:
       - ./src/backend/.temp.env
     volumes:
