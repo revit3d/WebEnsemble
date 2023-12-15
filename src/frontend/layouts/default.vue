@@ -24,7 +24,6 @@ export default defineNuxtComponent({
   },
   mounted() {
     const websocket = new WebSocket('ws://localhost:8000/model/fit');
-    console.log('ya sozdalsya')
 
     websocket.onmessage = ({ data }) => {
       const store = useStore();
@@ -44,6 +43,6 @@ body, html {
   margin: 0;
   padding: 0;
   background: rgb(105,255,251);
-  background: linear-gradient(153deg, rgba(105,255,251,1) 0%, rgba(173,145,255,1) 100%);
+  background: linear-gradient(153deg, rgb(214, 253, 252) 0%, rgb(231, 224, 255) 100%);
 }
 </style>
