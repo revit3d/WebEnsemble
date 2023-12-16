@@ -1,18 +1,18 @@
 .button-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 56px;
-    width: 128px;
-    padding: 6px;
-    border-radius: 3px;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  width: 128px;
+  padding: 6px;
+  border-radius: 3px;
+  cursor: pointer;
 }
 .button-waiting {
-    background-color: #737373;
-    border: 2px solid #404040;
+  background-color: #737373;
+  border: 2px solid #404040;
 }
 .button-ready {
-    background-color: #10b981;
-    border: 2px solid #047857;
+  background-color: #10b981;
+  border: 2px solid #047857;
 }

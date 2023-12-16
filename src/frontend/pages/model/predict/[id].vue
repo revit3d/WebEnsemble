@@ -20,7 +20,7 @@
     <div v-if="isPredsAvailable">
       <p class="p-6 text-5xl font-bold tracking-wider m-3">Model has finished inference</p>
       <p class="font-semibold text-3xl tracking-wide mb-5">Download predictions file</p>
-      <p>{{ this.predictions }}</p>
+      <button @click="downloadPreds(this.predictions)" class="button-container button-ready font-semibold text-2xl mt-4">Download</button>
     </div>
   </div>
 </template>
@@ -59,11 +59,12 @@ export default {
       try {
         const store = useStore();
         const apiUrl = process.server ? store.API_URL_SERVER : store.API_URL_CLIENT
-        const response = await $fetch('http://' + apiUrl + '/model/predict/' + this.$route.params.id, {
+        const response = await $fetch('http://' + apiUrl + '/api/model/predict/' + this.$route.params.id, {
           method: 'POST',
           body: formData,
         });
-        this.predictions = response.preds_file_path;
+        this.predictions = response.file_path;
+        console.log(this.predictions)
       } catch (error) {
         console.error('Error:', error);
         throw createError({
@@ -71,6 +72,11 @@ export default {
           statusMessage: 'Page Not Found'
         })
       }
+    },
+    async downloadPreds(fileUrl) {
+      const store = useStore();
+      const apiUrl = process.server ? store.API_URL_SERVER : store.API_URL_CLIENT
+      window.location.href = 'http://' + apiUrl + '/' + fileUrl;
     },
   },
 };

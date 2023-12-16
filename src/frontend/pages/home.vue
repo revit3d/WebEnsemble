@@ -3,9 +3,9 @@
 </template>
 
 <script>
-  import Announcement from '@/components/Announcement.vue';
+import Announcement from '@/components/Announcement.vue';
 
-  export default {
+export default {
   components: {
     Announcement,
   },

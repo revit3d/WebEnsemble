@@ -49,7 +49,7 @@ export default {
       try {
         const store = useStore();
         const apiUrl = process.server ? store.API_URL_SERVER : store.API_URL_CLIENT
-        const response = await $fetch('http://' + apiUrl + '/model/fit/' + this.$route.params.id, {
+        const response = await $fetch('http://' + apiUrl + '/api/model/fit/' + this.$route.params.id, {
           method: 'PUT',
           body: formData,
         });
@@ -63,7 +63,7 @@ export default {
         })
 
         // create a websocket to start fitting
-        const websocket = new WebSocket('ws://' + apiUrl + '/model/fit');
+        const websocket = new WebSocket('ws://' + apiUrl + '/api/model/fit');
         websocket.onopen = () => {
           websocket.send(this.$route.params.id);
         }

@@ -25,7 +25,6 @@ export default defineNuxtComponent ({
   computed: {
     modelStates() {
       const store = useStore();
-      console.log(store.modelStates)
       return store.modelStates;
     },
   },
