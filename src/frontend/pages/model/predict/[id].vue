@@ -63,7 +63,8 @@ export default {
           method: 'POST',
           body: formData,
         });
-        this.predictions = response.preds_file_path;
+        this.predictions = response.file_path;
+        console.log(this.predictions)
       } catch (error) {
         console.error('Error:', error);
         throw createError({

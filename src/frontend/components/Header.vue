@@ -10,27 +10,27 @@
 </template>
 
 <script>
-  import Logo from './Logo.vue'
-  import Sidebar from './Sidebar.vue';
-  import SidebarButton from './SidebarButton.vue';
+import Logo from './Logo.vue'
+import Sidebar from './Sidebar.vue';
+import SidebarButton from './SidebarButton.vue';
 
-  export default {
-    components: {
-      Logo,
-      Sidebar,
-      SidebarButton,
+export default {
+  components: {
+    Logo,
+    Sidebar,
+    SidebarButton,
+  },
+  data() {
+    return {
+      isSidebarOpen: false,
+    };
+  },
+  methods: {
+    toggleSidebar() {
+      this.isSidebarOpen = !this.isSidebarOpen;
     },
-    data() {
-      return {
-        isSidebarOpen: false,
-      };
-    },
-    methods: {
-      toggleSidebar() {
-        this.isSidebarOpen = !this.isSidebarOpen;
-      },
-    },
-  }
+  },
+}
 </script>
 
 <style scoped>
