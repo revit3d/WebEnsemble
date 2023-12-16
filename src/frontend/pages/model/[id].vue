@@ -131,42 +131,100 @@
         </div>
       </div>
     </div>
+    <div v-show="isModelFitted">
+      <p class="ml-16 mt-4 mb-4 text-2xl font-semibold">MSE on train and validation datasets</p>
+      <LineChart :chartData="chartData" :chartOptions="chartOptions"/>
+    </div>
     <div class="mt-12 flex gap-10 font-semibold text-2xl">
       <button class="button-container button-ready" @click="navigateTo('/model/fit/' + this.$route.params.id)">Fit model</button>
       <button :class="['button-container', isModelFitted ? 'button-ready' : 'button-waiting']" @click="navigateTo('/model/predict/' + this.$route.params.id)" :disabled="!isModelFitted">Make predictions</button>
+      <button :class="['button-container', (isModelFitting || isModelFitted) ? 'button-ready' : 'button-waiting']" @click="fetchFile(modelParams.train_dataset_file_path)" :disabled="!(isModelFitted || isModelFitting)">Download<br />train file</button>
+      <button :class="['button-container', ((isModelFitting || isModelFitted) && (modelParams.val_dataset_file_path !== null)) ? 'button-ready' : 'button-waiting']" @click="fetchFile(modelParams.val_dataset_file_path)" :disabled="!((isModelFitted || isModelFitting) && (modelParams.val_dataset_file_path !== null))">Download<br />validation file</button>
     </div>
   </div>
 </template>
 
 <script>
 import { useStore } from '@/store';
+import LineChart from '@/components/LineChart.vue';
 
 export default defineNuxtComponent({
-    computed: {
-        isModelFitted() {
-            const store = useStore();
-            let modelStatus = store.modelStates.find(obj => obj.id === this.$route.params.id);
-            return modelStatus.is_trained;
-        },
-        isModelFitting() {
-            const store = useStore();
-            let modelStatus = store.modelStates.find(obj => obj.id === this.$route.params.id);
-            return (modelStatus.target_name !== null) && !modelStatus.is_trained;
-        },
+  components: {
+    LineChart
+  },
+  computed: {
+    isModelFitted() {
+    console.log(this.modelParams.val_dataset_file_path);
+      const store = useStore();
+      let modelStatus = store.modelStates.find(obj => obj.id === this.$route.params.id);
+      return modelStatus.is_trained;
     },
-    async asyncData ({ payload }) {
-        try {
-            const store = useStore();
-            const apiUrl = process.server ? store.API_URL_SERVER : store.API_URL_CLIENT
-            const response = await $fetch('http://' + apiUrl + payload.path);
-            return {
-                modelParams: response,
-            };
-        } catch (error) {
-            console.error('Error fetching data:', error);
-            throw error;
-        }
+    isModelFitting() {
+      const store = useStore();
+      let modelStatus = store.modelStates.find(obj => obj.id === this.$route.params.id);
+      return (modelStatus.target_name !== null) && !modelStatus.is_trained;
     },
+    chartData() {
+      const store = useStore();
+      let modelStatus = store.modelStates.find(obj => obj.id === this.$route.params.id);
+      if (modelStatus.is_trained) {
+        return {
+          labels: Array.from({ length: this.modelParams.train_loss.length }, (_, index) => index + 1),
+          datasets: [
+            {
+              data: this.modelParams.train_loss,
+              label: 'Train loss',
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 1,
+            },
+            {
+              data: this.modelParams.val_loss,
+              label: 'Validation loss',
+              backgroundColor: 'rgba(255, 0, 0, 0.2)',
+              borderColor: 'rgba(255, 0, 0, 1)',
+              borderWidth: 1,
+            }
+          ]
+        };
+      } else {
+        return { labels: [], datasets: [] }
+      }
+    },
+    chartOptions() {
+      return {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            labels: {
+              font: {
+                size: 22,
+              },
+            },
+          },
+        },
+      };
+    },
+  },
+  async asyncData ({ payload }) {
+    try {
+      const store = useStore();
+      const apiUrl = process.server ? store.API_URL_SERVER : store.API_URL_CLIENT
+      const response = await $fetch('http://' + apiUrl + '/api' + payload.path);
+      return { modelParams: response };
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      throw error;
+    }
+  },
+  methods: {
+    async fetchFile(fileUrl) {
+      const store = useStore();
+      const apiUrl = process.server ? store.API_URL_SERVER : store.API_URL_CLIENT
+      window.location.href = 'http://' + apiUrl + '/' + fileUrl;
+    },
+  },
 });
 </script>
 

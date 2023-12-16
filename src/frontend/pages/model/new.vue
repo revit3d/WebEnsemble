@@ -123,62 +123,62 @@ import { useStore } from '@/store';
 
 export default defineNuxtComponent({
   data() {
-  return {
-    activeStep: 1,
-    noMaxDepth: false,
-    modelParams: {
-    model_name: undefined,
-    model_type: undefined,
-    ensemble_params: {
-      n_estimators: undefined,
-      learning_rate: undefined,
-      max_depth: undefined,
-      feature_subsample_size: undefined,
-    },
-    tree_params: {
-      splitter: undefined,
-      min_samples_split: undefined,
-      min_samples_leaf: undefined,
-      min_weight_fraction_leaf: undefined,
-      max_features: undefined,
-      random_state: undefined,
-      max_leaf_nodes: undefined,
-      min_impurity_decrease: undefined,
-      ccp_alpha: undefined,
-    },
-    },
-  };
+    return {
+      activeStep: 1,
+      noMaxDepth: false,
+      modelParams: {
+        model_name: undefined,
+        model_type: undefined,
+        ensemble_params: {
+          n_estimators: undefined,
+          learning_rate: undefined,
+          max_depth: undefined,
+          feature_subsample_size: undefined,
+        },
+        tree_params: {
+          splitter: undefined,
+          min_samples_split: undefined,
+          min_samples_leaf: undefined,
+          min_weight_fraction_leaf: undefined,
+          max_features: undefined,
+          random_state: undefined,
+          max_leaf_nodes: undefined,
+          min_impurity_decrease: undefined,
+          ccp_alpha: undefined,
+        },
+      },
+    };
   },
   computed: {
-  isEnsParamsValid() {
-    return this.modelParams.ensemble_params.n_estimators && (this.noMaxDepth || this.modelParams.ensemble_params.max_depth);
-  },
-  isNameValid() {
-    return this.modelParams.model_name;
-  },
+    isEnsParamsValid() {
+      return this.modelParams.ensemble_params.n_estimators && (this.noMaxDepth || this.modelParams.ensemble_params.max_depth);
+    },
+    isNameValid() {
+      return this.modelParams.model_name;
+    },
   },
   methods: {
-  nextStep() {
-    if (this.activeStep < 4) {
-    this.activeStep++;
-    }
-  },
-  async submitForm() {
-    try {
-      const store = useStore();
-      const apiUrl = process.server ? store.API_URL_SERVER : store.API_URL_CLIENT
-      const response = await $fetch('http://' + apiUrl + '/model/' + this.modelParams.model_type, {
-        method: 'POST',
-        body: JSON.stringify(this.modelParams),
-      });
-      console.log('/model/' + response.uuid);
-      await navigateTo('/model/' + response.uuid);
-      location.reload();
-    } catch (error) {
-      console.error('Error:', error);
-      throw error;
-    }
-  },
+    nextStep() {
+      if (this.activeStep < 4) {
+      this.activeStep++;
+      }
+    },
+    async submitForm() {
+      try {
+        const store = useStore();
+        const apiUrl = process.server ? store.API_URL_SERVER : store.API_URL_CLIENT
+        const response = await $fetch('http://' + apiUrl + '/api/model/' + this.modelParams.model_type, {
+          method: 'POST',
+          body: JSON.stringify(this.modelParams),
+        });
+        console.log('/model/' + response.uuid);
+        await navigateTo('/model/' + response.uuid);
+        location.reload();
+      } catch (error) {
+        console.error('Error:', error);
+        throw error;
+      }
+    },
   },
 });
 </script>

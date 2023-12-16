@@ -47,7 +47,7 @@ services:
     container_name: frontend
     build:
       context: ./src/frontend
-    entrypoint: yarn dev
+    entrypoint: "node .output/server/index.mjs"
     expose:
       - 3000
     volumes:

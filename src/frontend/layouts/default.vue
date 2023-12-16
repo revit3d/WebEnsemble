@@ -24,7 +24,7 @@ export default defineNuxtComponent({
   mounted() {
     const store = useStore();
     const apiUrl = process.server ? store.API_URL_SERVER : store.API_URL_CLIENT
-    const websocket = new WebSocket('ws://' + apiUrl + '/model/fit');
+    const websocket = new WebSocket('ws://' + apiUrl + '/api/model/fit');
 
     websocket.onmessage = ({ data }) => {
       const store = useStore();
