@@ -6,9 +6,8 @@ import asyncio
 import numpy as np
 
 from fastapi import (
-    FastAPI, WebSocket, UploadFile, Request, 
-    APIRouter, WebSocketDisconnect, Form, Depends, 
-    File
+    FastAPI, WebSocket, UploadFile, APIRouter,
+    WebSocketDisconnect, Form, Depends, File
 )
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -148,9 +147,8 @@ async def fit_model(websocket: WebSocket,
 
 @router.post('/model/predict/{uuid_task}')
 def predict(uuid_task: uuid.UUID,
-            request: Request,
             test_file: UploadFile = File(...),
-            db: Session = Depends(get_db)) -> schemas.PredictInfoOut:
+            db: Session = Depends(get_db)) -> schemas.StorageFileOut:
     """
     Predict target for passed data.
 
@@ -169,14 +167,12 @@ def predict(uuid_task: uuid.UUID,
 
     preds_file_path = f'storage/predictions/{time.perf_counter_ns()}.csv'
     np.savetxt(preds_file_path, y_preds, delimiter=',')
-    preds_file_path = utils.convert_to_http_url(request, preds_file_path)
 
-    return schemas.PredictInfoOut(preds_file_path=preds_file_path)
+    return schemas.StorageFileOut(file_path=preds_file_path)
 
 
 @router.get('/model/{uuid_task}')
 def get_model_info(uuid_task: uuid.UUID,
-                   request: Request,
                    db: Session = Depends(get_db)) -> schemas.RFModelOut | schemas.GBModelOut:
     """
     Return metadata about the model associated with the passed uuid.
@@ -191,16 +187,6 @@ def get_model_info(uuid_task: uuid.UUID,
 
     model_out_params = utils.deserialize(model_db_item)
     del model_out_params['model_deserialized']
-
-    model_out_params['train_dataset_file_path'] = utils.convert_to_http_url(
-        request,
-        model_out_params['train_dataset_file_path']
-    )
-    if model_out_params['val_dataset_file_path'] is not None:
-        model_out_params['val_dataset_file_path'] = utils.convert_to_http_url(
-            request,
-            model_out_params['val_dataset_file_path']
-        )
 
     if model_db_item.model_type is schemas.ModelType.random_forest:
         return schemas.RFModelOut(**model_out_params)
