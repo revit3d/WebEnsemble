@@ -70,8 +70,8 @@ class GBModelOut(GBModelIn, MLModelOut):
     model_type: ModelType = ModelType.gradient_boosting
 
 
-class PredictInfoOut(BaseModel):
-    preds_file_path: str
+class StorageFileOut(BaseModel):
+    file_path: str
 
 
 class ModelStatusElement(BaseModel):

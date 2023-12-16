@@ -148,7 +148,7 @@ async def fit_model(websocket: WebSocket,
 @router.post('/model/predict/{uuid_task}')
 def predict(uuid_task: uuid.UUID,
             test_file: UploadFile = File(...),
-            db: Session = Depends(get_db)) -> schemas.PredictInfoOut:
+            db: Session = Depends(get_db)) -> schemas.StorageFileOut:
     """
     Predict target for passed data.
 
@@ -168,7 +168,7 @@ def predict(uuid_task: uuid.UUID,
     preds_file_path = f'storage/predictions/{time.perf_counter_ns()}.csv'
     np.savetxt(preds_file_path, y_preds, delimiter=',')
 
-    return schemas.PredictInfoOut(preds_file_path=preds_file_path)
+    return schemas.StorageFileOut(file_path=preds_file_path)
 
 
 @router.get('/model/{uuid_task}')
