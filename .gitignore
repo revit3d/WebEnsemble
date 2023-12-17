@@ -161,3 +161,6 @@ cython_debug/
 
 # ignore csv files produced by sql database
 src/backend/storage/*/*.csv
+
+# ignore csv files with data from experiments
+*.csv
